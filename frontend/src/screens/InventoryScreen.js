@@ -13,8 +13,9 @@ import { Colors, Typography, Spacing, Radius } from '../constants/theme';
 import { useProducts, useCategories } from '../hooks/useProducts';
 import { useSearch } from '../hooks/useSearch';
 import ProductCard from '../components/ProductCard';
-import { LoadingSpinner, ErrorView, EmptyState, Chip } from '../components/ui';
 import SiteFooter from '../components/SiteFooter';
+import { LoadingSpinner, ErrorView, EmptyState, Chip } from '../components/ui';
+import { useTabNavigation } from '../navigation/TabNavigationContext';
 
 const CONDITIONS = [
   { label: 'All', value: '' },
@@ -24,6 +25,7 @@ const CONDITIONS = [
 ];
 
 const InventoryScreen = ({ navigation, route }) => {
+  const { switchTab } = useTabNavigation();
   const initialCategory = route.params?.category ?? '';
   const [search, setSearch] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -31,9 +33,8 @@ const InventoryScreen = ({ navigation, route }) => {
   const [selectedCondition, setSelectedCondition] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const { recentSearches, saveSearch, removeSearch, clearSearches } = useSearch();
+  const { recentSearches, saveSearch, removeSearch } = useSearch();
 
-  // Debounce search input
   useEffect(() => {
     const t = setTimeout(() => {
       setDebouncedSearch(search);
@@ -42,7 +43,6 @@ const InventoryScreen = ({ navigation, route }) => {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Sync category from route params
   useEffect(() => {
     if (route.params?.category !== undefined) {
       setSelectedCategory(route.params.category);
@@ -57,74 +57,55 @@ const InventoryScreen = ({ navigation, route }) => {
 
   const { products, loading, error, hasMore, loadMore, refresh } = useProducts(filters);
   const { categories } = useCategories();
-
   const allCategories = [{ id: '__all', slug: '', name: 'All' }, ...categories];
 
   const handleProductPress = (product) => {
     navigation.navigate('ProductDetail', { id: product.id, name: product.name });
   };
 
-  const applyRecentSearch = (term) => {
-    setSearch(term);
-    setSearchFocused(false);
-  };
-
   const showSuggestions = searchFocused && search.length === 0 && recentSearches.length > 0;
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={[styles.searchBar, searchFocused && styles.searchBarFocused]}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search vehicles, chairs, lifts…"
-            placeholderTextColor={Colors.gray400}
-            value={search}
-            onChangeText={setSearch}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-            returnKeyType="search"
-            onSubmitEditing={() => search.trim() && saveSearch(search.trim())}
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => { setSearch(''); setDebouncedSearch(''); }}>
-              <Text style={styles.clearIcon}>✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Recent searches dropdown */}
-        {showSuggestions && (
-          <View style={styles.suggestions}>
-            <View style={styles.suggestionsHeader}>
-              <Text style={styles.suggestionsTitle}>Recent Searches</Text>
-              <TouchableOpacity onPress={clearSearches}>
-                <Text style={styles.clearRecentText}>Clear</Text>
-              </TouchableOpacity>
-            </View>
-            {recentSearches.map((term) => (
-              <TouchableOpacity
-                key={term}
-                style={styles.suggestionRow}
-                onPress={() => applyRecentSearch(term)}
-              >
-                <Text style={styles.suggestionIcon}>🕐</Text>
-                <Text style={styles.suggestionText}>{term}</Text>
-                <TouchableOpacity
-                  onPress={() => removeSearch(term)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Text style={styles.suggestionRemove}>✕</Text>
-                </TouchableOpacity>
-              </TouchableOpacity>
-            ))}
-          </View>
+      {/* Search bar */}
+      <View style={styles.searchBar}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search inventory…"
+          placeholderTextColor={Colors.gray400}
+          value={search}
+          onChangeText={setSearch}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+          returnKeyType="search"
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={styles.clearBtn}>✕</Text>
+          </TouchableOpacity>
         )}
       </View>
 
-      {/* Category Filter */}
+      {/* Recent search suggestions */}
+      {showSuggestions && (
+        <View style={styles.suggestions}>
+          {recentSearches.slice(0, 5).map((term) => (
+            <TouchableOpacity
+              key={term}
+              style={styles.suggestionRow}
+              onPress={() => { setSearch(term); setSearchFocused(false); }}
+            >
+              <Text style={styles.suggestionIcon}>🕐</Text>
+              <Text style={styles.suggestionText}>{term}</Text>
+              <TouchableOpacity onPress={() => removeSearch(term)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={styles.suggestionRemove}>✕</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* Category filter */}
       <View style={styles.filterRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterList}>
           {allCategories.map((cat) => (
@@ -151,9 +132,7 @@ const InventoryScreen = ({ navigation, route }) => {
             />
           ))}
         </ScrollView>
-        <Text style={styles.resultCount}>
-          {loading ? '…' : `${products.length} results`}
-        </Text>
+        <Text style={styles.resultCount}>{loading ? '…' : `${products.length} results`}</Text>
       </View>
 
       {/* Results */}
@@ -167,12 +146,7 @@ const InventoryScreen = ({ navigation, route }) => {
           title="No products found"
           message="Try adjusting your filters or search term."
           action="Clear Filters"
-          onAction={() => {
-            setSearch('');
-            setDebouncedSearch('');
-            setSelectedCategory('');
-            setSelectedCondition('');
-          }}
+          onAction={() => { setSearch(''); setDebouncedSearch(''); setSelectedCategory(''); setSelectedCondition(''); }}
         />
       ) : (
         <FlatList
@@ -190,10 +164,12 @@ const InventoryScreen = ({ navigation, route }) => {
           )}
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
-          onRefresh={refresh}
-          refreshing={loading && products.length > 0}
-          keyboardShouldPersistTaps="handled"
-          ListFooterComponent={<SiteFooter navigation={navigation} />}
+          ListFooterComponent={
+            <>
+              {hasMore && <LoadingSpinner size="small" />}
+              <SiteFooter onTabPress={switchTab} />
+            </>
+          }
         />
       )}
     </SafeAreaView>
@@ -202,101 +178,19 @@ const InventoryScreen = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  searchContainer: {
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.sm,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    zIndex: 10,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.gray50,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  searchBarFocused: {
-    borderColor: Colors.primary,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-  },
-  searchIcon: { fontSize: 16, marginRight: Spacing.sm },
-  searchInput: { flex: 1, fontSize: Typography.sizes.base, color: Colors.black },
-  clearIcon: { fontSize: 14, color: Colors.gray400, paddingHorizontal: Spacing.xs },
-  suggestions: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderTopWidth: 0,
-    borderColor: Colors.primary,
-    borderBottomLeftRadius: Radius.md,
-    borderBottomRightRadius: Radius.md,
-    overflow: 'hidden',
-  },
-  suggestionsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-  },
-  suggestionsTitle: {
-    fontSize: Typography.sizes.xs,
-    fontWeight: Typography.weights.bold,
-    color: Colors.gray600,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  clearRecentText: {
-    fontSize: Typography.sizes.xs,
-    color: Colors.primary,
-    fontWeight: Typography.weights.semibold,
-  },
-  suggestionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm + 2,
-    gap: Spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-  },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: Spacing.sm },
+  searchInput: { flex: 1, fontSize: Typography.sizes.base, color: Colors.black, paddingVertical: Spacing.sm },
+  clearBtn: { fontSize: 16, color: Colors.gray400, paddingHorizontal: Spacing.sm },
+  suggestions: { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  suggestionRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, gap: Spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
   suggestionIcon: { fontSize: 14 },
-  suggestionText: {
-    flex: 1,
-    fontSize: Typography.sizes.base,
-    color: Colors.black,
-  },
+  suggestionText: { flex: 1, fontSize: Typography.sizes.base, color: Colors.black },
   suggestionRemove: { fontSize: 12, color: Colors.gray400 },
-  filterRow: {
-    backgroundColor: Colors.surface,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  conditionRow: {
-    backgroundColor: Colors.surface,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  filterRow: { backgroundColor: Colors.surface, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  conditionRow: { backgroundColor: Colors.surface, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border, flexDirection: 'row', alignItems: 'center' },
   filterList: { paddingHorizontal: Spacing.base, flexGrow: 0 },
-  resultCount: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.gray400,
-    paddingRight: Spacing.base,
-    minWidth: 70,
-    textAlign: 'right',
-  },
-  grid: { padding: Spacing.base, paddingBottom: Spacing['3xl'] },
+  resultCount: { fontSize: Typography.sizes.sm, color: Colors.gray400, paddingRight: Spacing.base, minWidth: 70, textAlign: 'right' },
+  grid: { padding: Spacing.base },
   row: { justifyContent: 'space-between', marginBottom: Spacing.md },
   card: { width: '48.5%' },
 });

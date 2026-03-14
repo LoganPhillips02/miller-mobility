@@ -14,8 +14,9 @@ import { useFeaturedProducts, useCategories } from '../hooks/useProducts';
 import { useDeals } from '../hooks/useDeals';
 import ProductCard from '../components/ProductCard';
 import DealCard from '../components/DealCard';
-import { SectionHeader, LoadingSpinner, Badge } from '../components/ui';
 import SiteFooter from '../components/SiteFooter';
+import { SectionHeader, LoadingSpinner } from '../components/ui';
+import { useTabNavigation } from '../navigation/TabNavigationContext';
 
 const CATEGORY_ICONS = {
   'wheelchair-accessible-vehicles': '🚐',
@@ -26,61 +27,46 @@ const CATEGORY_ICONS = {
   'accessories': '🎒',
 };
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = () => {
+  const { switchTab } = useTabNavigation();
   const { products: featured, loading: featuredLoading } = useFeaturedProducts();
   const { categories, loading: categoriesLoading } = useCategories();
   const { deals, loading: dealsLoading } = useDeals();
-
   const featuredDeals = deals.filter((d) => d.isFeatured).slice(0, 3);
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Hero Header */}
+
+        {/* Hero */}
         <View style={styles.hero}>
           <Text style={styles.heroTag}>Miller Mobility</Text>
           <Text style={styles.heroTitle}>Find Your Perfect{'\n'}Mobility Solution</Text>
-          <Text style={styles.heroSub}>
-            New & pre-owned WAVs, power chairs, scooters, and more.
-          </Text>
-          <TouchableOpacity
-            style={styles.heroButton}
-            onPress={() => navigation.navigate('Inventory')}
-          >
+          <Text style={styles.heroSub}>New & pre-owned WAVs, power chairs, scooters, and more.</Text>
+          <TouchableOpacity style={styles.heroButton} onPress={() => switchTab('Inventory')}>
             <Text style={styles.heroButtonText}>Browse Inventory →</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Quick Category Grid */}
+        {/* Categories */}
         <View style={styles.section}>
-          <SectionHeader
-            title="Shop by Category"
-            onSeeAll={() => navigation.navigate('Inventory')}
-          />
-          {categoriesLoading ? (
-            <LoadingSpinner size="small" />
-          ) : (
+          <SectionHeader title="Shop by Category" onSeeAll={() => switchTab('Inventory')} />
+          {categoriesLoading ? <LoadingSpinner size="small" /> : (
             <FlatList
               data={categories}
               keyExtractor={(item) => item.id?.toString() ?? item.slug}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoryList}
+              contentContainerStyle={styles.horizontalList}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.categoryChip}
-                  onPress={() =>
-                    navigation.navigate('Inventory', { category: item.slug, categoryName: item.name })
-                  }
+                  onPress={() => switchTab('Inventory', { category: item.slug, categoryName: item.name })}
                 >
-                  <Text style={styles.categoryIcon}>
-                    {CATEGORY_ICONS[item.slug] ?? '📦'}
-                  </Text>
+                  <Text style={styles.categoryIcon}>{CATEGORY_ICONS[item.slug] ?? '📦'}</Text>
                   <Text style={styles.categoryName}>{item.name}</Text>
-                  {item.productCount > 0 && (
-                    <Text style={styles.categoryCount}>{item.productCount}</Text>
-                  )}
+                  {item.productCount > 0 && <Text style={styles.categoryCount}>{item.productCount}</Text>}
                 </TouchableOpacity>
               )}
             />
@@ -90,13 +76,8 @@ const HomeScreen = ({ navigation }) => {
         {/* Featured Deals */}
         {(featuredDeals.length > 0 || dealsLoading) && (
           <View style={styles.section}>
-            <SectionHeader
-              title="Current Deals"
-              onSeeAll={() => navigation.navigate('Deals')}
-            />
-            {dealsLoading ? (
-              <LoadingSpinner size="small" />
-            ) : (
+            <SectionHeader title="Current Deals" onSeeAll={() => switchTab('Deals')} />
+            {dealsLoading ? <LoadingSpinner size="small" /> : (
               <FlatList
                 data={featuredDeals}
                 keyExtractor={(item) => item.id?.toString() ?? item.slug}
@@ -107,7 +88,7 @@ const HomeScreen = ({ navigation }) => {
                   <DealCard
                     deal={item}
                     style={styles.dealCard}
-                    onPress={(d) => navigation.navigate('Deals', { screen: 'DealDetail', params: { slug: d.slug } })}
+                    onPress={() => switchTab('Deals')}
                   />
                 )}
               />
@@ -117,13 +98,8 @@ const HomeScreen = ({ navigation }) => {
 
         {/* Featured Inventory */}
         <View style={styles.section}>
-          <SectionHeader
-            title="Featured Inventory"
-            onSeeAll={() => navigation.navigate('Inventory', { featured: true })}
-          />
-          {featuredLoading ? (
-            <LoadingSpinner size="small" />
-          ) : (
+          <SectionHeader title="Featured Inventory" onSeeAll={() => switchTab('Inventory', { featured: true })} />
+          {featuredLoading ? <LoadingSpinner size="small" /> : (
             <FlatList
               data={featured.slice(0, 6)}
               keyExtractor={(item) => item.id?.toString()}
@@ -134,12 +110,7 @@ const HomeScreen = ({ navigation }) => {
                 <ProductCard
                   product={item}
                   style={styles.productCard}
-                  onPress={(p) =>
-                    navigation.navigate('Inventory', {
-                      screen: 'ProductDetail',
-                      params: { id: p.id, name: p.name },
-                    })
-                  }
+                  onPress={() => switchTab('Inventory')}
                 />
               )}
             />
@@ -161,132 +132,44 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={styles.whyText}>{text}</Text>
               </View>
             ))}
-            <TouchableOpacity
-              style={styles.contactButton}
-              onPress={() => navigation.navigate('Contact')}
-            >
-              <Text style={styles.contactButtonText}>Contact Us Today</Text>
+            <TouchableOpacity style={styles.contactButton} onPress={() => switchTab('Contact')}>
+              <Text style={styles.contactButtonText}>Contact Us →</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={{ height: Spacing['2xl'] }} />
-        <SiteFooter navigation={navigation} />
+        {/* Footer */}
+        <SiteFooter onTabPress={switchTab} />
+
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.primary },
-  scroll: { flex: 1, backgroundColor: Colors.background },
-  hero: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing['3xl'],
-  },
-  heroTag: {
-    fontSize: Typography.sizes.xs,
-    fontWeight: Typography.weights.bold,
-    color: Colors.primaryLight,
-    textTransform: 'uppercase',
-    letterSpacing: 2,
-    marginBottom: Spacing.sm,
-  },
-  heroTitle: {
-    fontSize: Typography.sizes['3xl'],
-    fontWeight: Typography.weights.heavy,
-    color: Colors.white,
-    lineHeight: Typography.sizes['3xl'] * 1.2,
-    marginBottom: Spacing.sm,
-  },
-  heroSub: {
-    fontSize: Typography.sizes.base,
-    color: 'rgba(255,255,255,0.75)',
-    marginBottom: Spacing.lg,
-  },
-  heroButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.accent,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.md,
-  },
-  heroButtonText: {
-    color: Colors.white,
-    fontSize: Typography.sizes.base,
-    fontWeight: Typography.weights.bold,
-  },
-  section: {
-    marginTop: Spacing.xl,
-  },
-  categoryList: {
-    paddingHorizontal: Spacing.base,
-    gap: Spacing.sm,
-  },
-  categoryChip: {
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
-    minWidth: 90,
-    ...Shadows.sm,
-  },
+  safe: { flex: 1, backgroundColor: Colors.background },
+  scroll: { flex: 1 },
+  hero: { backgroundColor: Colors.primary, padding: Spacing.xl, paddingTop: Spacing['2xl'] },
+  heroTag: { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.bold, color: 'rgba(255,255,255,0.6)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: Spacing.sm },
+  heroTitle: { fontSize: Typography.sizes['3xl'], fontWeight: Typography.weights.heavy, color: Colors.white, lineHeight: Typography.sizes['3xl'] * 1.2, marginBottom: Spacing.sm },
+  heroSub: { fontSize: Typography.sizes.base, color: 'rgba(255,255,255,0.75)', marginBottom: Spacing.lg },
+  heroButton: { backgroundColor: Colors.white, paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl, borderRadius: Radius.full, alignSelf: 'flex-start' },
+  heroButtonText: { color: Colors.primary, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.base },
+  section: { marginTop: Spacing.xl, paddingHorizontal: Spacing.base },
+  horizontalList: { paddingRight: Spacing.base },
+  categoryChip: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.md, marginRight: Spacing.sm, alignItems: 'center', minWidth: 80, ...Shadows.sm },
   categoryIcon: { fontSize: 28, marginBottom: Spacing.xs },
-  categoryName: {
-    fontSize: Typography.sizes.xs,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.black,
-    textAlign: 'center',
-  },
-  categoryCount: {
-    fontSize: Typography.sizes.xs,
-    color: Colors.gray400,
-    marginTop: 2,
-  },
-  horizontalList: {
-    paddingHorizontal: Spacing.base,
-    gap: Spacing.md,
-  },
-  dealCard: { width: 260 },
-  productCard: { width: 220 },
-  whyCard: {
-    marginHorizontal: Spacing.base,
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.xl,
-    padding: Spacing.xl,
-    ...Shadows.lg,
-  },
-  whyTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.bold,
-    color: Colors.white,
-    marginBottom: Spacing.base,
-  },
-  whyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-    gap: Spacing.md,
-  },
-  whyIcon: { fontSize: 22 },
-  whyText: {
-    fontSize: Typography.sizes.base,
-    color: 'rgba(255,255,255,0.9)',
-  },
-  contactButton: {
-    marginTop: Spacing.base,
-    backgroundColor: Colors.accent,
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-  },
-  contactButtonText: {
-    color: Colors.white,
-    fontWeight: Typography.weights.bold,
-    fontSize: Typography.sizes.base,
-  },
+  categoryName: { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.semibold, color: Colors.black, textAlign: 'center' },
+  categoryCount: { fontSize: Typography.sizes.xs, color: Colors.gray400, marginTop: 2 },
+  productCard: { width: 200, marginRight: Spacing.md },
+  dealCard: { width: 260, marginRight: Spacing.md },
+  whyCard: { backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg, marginBottom: Spacing.lg },
+  whyTitle: { fontSize: Typography.sizes.lg, fontWeight: Typography.weights.heavy, color: Colors.white, marginBottom: Spacing.md },
+  whyRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm, gap: Spacing.md },
+  whyIcon: { fontSize: 20 },
+  whyText: { fontSize: Typography.sizes.base, color: 'rgba(255,255,255,0.85)', flex: 1 },
+  contactButton: { marginTop: Spacing.md, backgroundColor: 'rgba(255,255,255,0.15)', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.full, alignSelf: 'flex-start' },
+  contactButtonText: { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm },
 });
 
 export default HomeScreen;

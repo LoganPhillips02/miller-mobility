@@ -7,27 +7,23 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../constants/theme';
+import { Colors, Typography, Spacing } from '../constants/theme';
 import { useFavorites } from '../hooks/useFavorites';
 import { productsService } from '../services/api';
 import ProductCard from '../components/ProductCard';
-import { LoadingSpinner, EmptyState } from '../components/ui';
 import SiteFooter from '../components/SiteFooter';
+import { LoadingSpinner, EmptyState } from '../components/ui';
+import { useTabNavigation } from '../navigation/TabNavigationContext';
 
-const FavoritesScreen = ({ navigation }) => {
+const FavoritesScreen = () => {
+  const { switchTab } = useTabNavigation();
   const { favoriteIds, favoriteCount, clearFavorites } = useFavorites();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (favoriteIds.size === 0) {
-      setProducts([]);
-      setLoading(false);
-      return;
-    }
-
+    if (favoriteIds.size === 0) { setProducts([]); setLoading(false); return; }
     setLoading(true);
-    // Fetch each favorited product in parallel
     Promise.all([...favoriteIds].map((id) => productsService.detail(id)))
       .then(setProducts)
       .catch(() => setProducts([]))
@@ -36,7 +32,6 @@ const FavoritesScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Saved Vehicles</Text>
         {favoriteCount > 0 && (
@@ -54,7 +49,7 @@ const FavoritesScreen = ({ navigation }) => {
           title="No saved vehicles"
           message="Tap the heart icon on any product to save it here for later."
           action="Browse Inventory"
-          onAction={() => navigation.navigate('Inventory')}
+          onAction={() => switchTab('Inventory')}
         />
       ) : (
         <FlatList
@@ -67,15 +62,10 @@ const FavoritesScreen = ({ navigation }) => {
             <ProductCard
               product={item}
               style={styles.card}
-              onPress={(p) =>
-                navigation.navigate('Inventory', {
-                  screen: 'ProductDetail',
-                  params: { id: p.id, name: p.name },
-                })
-              }
+              onPress={() => switchTab('Inventory')}
             />
           )}
-          ListFooterComponent={<SiteFooter navigation={navigation} />}
+          ListFooterComponent={<SiteFooter onTabPress={switchTab} />}
         />
       )}
     </SafeAreaView>
@@ -84,32 +74,11 @@ const FavoritesScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerTitle: {
-    fontSize: Typography.sizes['2xl'],
-    fontWeight: Typography.weights.heavy,
-    color: Colors.white,
-  },
-  clearText: {
-    fontSize: Typography.sizes.sm,
-    color: 'rgba(255,255,255,0.7)',
-    fontWeight: Typography.weights.medium,
-  },
-  grid: {
-    padding: Spacing.base,
-    paddingBottom: Spacing['3xl'],
-  },
-  row: {
-    justifyContent: 'space-between',
-    marginBottom: Spacing.md,
-  },
+  header: { backgroundColor: Colors.primary, paddingHorizontal: Spacing.base, paddingVertical: Spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerTitle: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.white },
+  clearText: { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.7)', fontWeight: Typography.weights.medium },
+  grid: { padding: Spacing.base },
+  row: { justifyContent: 'space-between', marginBottom: Spacing.md },
   card: { width: '48.5%' },
 });
 

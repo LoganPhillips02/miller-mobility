@@ -1,21 +1,32 @@
 /**
  * AppNavigator.js
+ * Place this file at: src/navigation/AppNavigator.js
  *
- * Layout:
+ * Architecture
+ * ────────────
+ * createBottomTabNavigator hard-wires its layout as [screen][tabBar], so the
+ * tab bar always ends up at the bottom. To put it at the top we own the layout:
+ *
  *   <SafeAreaView>
- *     <TopNavBar />          ← physically first in the tree = TOP of screen
+ *     <TopNavBar />       ← rendered first → physically at the top
  *     <View flex:1>
- *       {each tab wrapped in its own independent NavigationContainer}
- *       {inactive tabs are hidden but kept mounted to preserve state}
+ *       {tab screens}     ← each in its own independent NavigationContainer
  *     </View>
  *   </SafeAreaView>
  *
- * We use `independent={true}` on each tab's NavigationContainer so React
- * Navigation doesn't complain about multiple navigators sharing one container.
- * https://reactnavigation.org/docs/navigation-container/#independent
+ * Because each tab has its own NavigationContainer (independent={true}),
+ * cross-tab calls like navigation.navigate('Inventory') won't work through
+ * React Navigation. Instead we expose a TabNavigationContext so screens can
+ * call switchTab('Inventory') to change the active tab.
+ *
+ * Screens that need updating (only cross-tab navigate calls):
+ *   - HomeScreen          → replace navigation.navigate('Inventory'/'Deals') with switchTab(...)
+ *   - FavoritesScreen     → replace navigation.navigate('Inventory') with switchTab('Inventory')
+ *   Within-tab navigation (e.g. ProductDetail, DealDetail) still uses the
+ *   normal navigation prop and needs no changes.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   Text,
   View,
@@ -35,10 +46,11 @@ import DealDetailScreen    from '../screens/DealDetailScreen';
 import FavoritesScreen     from '../screens/FavoritesScreen';
 import ContactScreen       from '../screens/ContactScreen';
 
-import { useFavorites } from '../hooks/useFavorites';
+import { useFavorites }         from '../hooks/useFavorites';
 import { Colors, Typography, Spacing } from '../constants/theme';
+import { TabNavigationContext }  from './TabNavigationContext';
 
-// ─── Stack instances (one per tab) ───────────────────────────────────────────
+// ─── Stack instances ──────────────────────────────────────────────────────────
 const HomeStack      = createStackNavigator();
 const InventoryStack = createStackNavigator();
 const DealsStack     = createStackNavigator();
@@ -56,8 +68,8 @@ const stackHeaderOptions = {
 };
 
 // ─── Per-tab navigators ───────────────────────────────────────────────────────
-// Each one wraps its stack in an independent NavigationContainer so React
-// Navigation doesn't throw "multiple navigators under a single container".
+// Each wraps its own independent NavigationContainer so React Navigation
+// doesn't throw "multiple navigators under a single container".
 
 const HomeTab = () => (
   <NavigationContainer independent={true}>
@@ -67,22 +79,28 @@ const HomeTab = () => (
   </NavigationContainer>
 );
 
-const InventoryTab = () => (
-  <NavigationContainer independent={true}>
-    <InventoryStack.Navigator screenOptions={stackHeaderOptions}>
-      <InventoryStack.Screen
-        name="InventoryList"
-        component={InventoryScreen}
-        options={{ title: 'Inventory' }}
-      />
-      <InventoryStack.Screen
-        name="ProductDetail"
-        component={ProductDetailScreen}
-        options={({ route }) => ({ title: route.params?.name ?? 'Product Details' })}
-      />
-    </InventoryStack.Navigator>
-  </NavigationContainer>
-);
+const InventoryTab = ({ pendingParams }) => {
+  // pendingParams lets HomeScreen pass { category, categoryName } when it
+  // switches to this tab. The ref is consumed once by InventoryScreen via
+  // route.params (set as initialParams on the screen).
+  return (
+    <NavigationContainer independent={true}>
+      <InventoryStack.Navigator screenOptions={stackHeaderOptions}>
+        <InventoryStack.Screen
+          name="InventoryList"
+          component={InventoryScreen}
+          options={{ title: 'Inventory' }}
+          initialParams={pendingParams ?? {}}
+        />
+        <InventoryStack.Screen
+          name="ProductDetail"
+          component={ProductDetailScreen}
+          options={({ route }) => ({ title: route.params?.name ?? 'Product Details' })}
+        />
+      </InventoryStack.Navigator>
+    </NavigationContainer>
+  );
+};
 
 const DealsTab = () => (
   <NavigationContainer independent={true}>
@@ -119,11 +137,11 @@ const ContactTab = () => (
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
 const TABS = [
-  { key: 'Home',      emoji: '🏠', label: 'Home',      Component: HomeTab },
-  { key: 'Inventory', emoji: '🚐', label: 'Inventory', Component: InventoryTab },
-  { key: 'Deals',     emoji: '🏷️', label: 'Deals',     Component: DealsTab },
-  { key: 'Favorites', emoji: '❤️', label: 'Saved',     Component: FavoritesTab },
-  { key: 'Contact',   emoji: '📞', label: 'Contact',   Component: ContactTab },
+  { key: 'Home',      emoji: '🏠', label: 'Home'      },
+  { key: 'Inventory', emoji: '🚐', label: 'Inventory' },
+  { key: 'Deals',     emoji: '🏷️', label: 'Deals'     },
+  { key: 'Favorites', emoji: '❤️', label: 'Saved'     },
+  { key: 'Contact',   emoji: '📞', label: 'Contact'   },
 ];
 
 // ─── Top Navigation Bar ───────────────────────────────────────────────────────
@@ -166,37 +184,57 @@ const TopNavBar = ({ activeTab, onTabPress, favoriteCount }) => (
 
 // ─── Root App Navigator ───────────────────────────────────────────────────────
 const AppNavigator = () => {
-  const [activeTab, setActiveTab] = useState('Home');
+  const [activeTab, setActiveTab]         = useState('Home');
+  const [inventoryParams, setInventoryParams] = useState(null);
   const { favoriteCount } = useFavorites();
+
+  // switchTab is exposed via context so any screen can call it
+  const switchTab = useCallback((tabKey, params) => {
+    if (tabKey === 'Inventory' && params) {
+      setInventoryParams(params);
+    }
+    setActiveTab(tabKey);
+  }, []);
+
   const handleTabPress = useCallback((key) => setActiveTab(key), []);
 
+  const tabComponents = {
+    Home:      <HomeTab />,
+    Inventory: <InventoryTab pendingParams={inventoryParams} />,
+    Deals:     <DealsTab />,
+    Favorites: <FavoritesTab />,
+    Contact:   <ContactTab />,
+  };
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
+    <TabNavigationContext.Provider value={{ switchTab }}>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
 
-      {/* TOP NAV BAR — first in the tree so it renders at the top */}
-      <TopNavBar
-        activeTab={activeTab}
-        onTabPress={handleTabPress}
-        favoriteCount={favoriteCount}
-      />
+        {/* TOP NAV BAR — first in the tree → renders at the top */}
+        <TopNavBar
+          activeTab={activeTab}
+          onTabPress={handleTabPress}
+          favoriteCount={favoriteCount}
+        />
 
-      {/* SCREEN AREA — fills all space below the nav bar */}
-      <View style={styles.screenContainer}>
-        {TABS.map((tab) => (
-          <View
-            key={tab.key}
-            style={[
-              styles.screenSlot,
-              activeTab === tab.key ? styles.screenVisible : styles.screenHidden,
-            ]}
-            pointerEvents={activeTab === tab.key ? 'auto' : 'none'}
-          >
-            <tab.Component />
-          </View>
-        ))}
-      </View>
-    </SafeAreaView>
+        {/* SCREEN AREA — fills all space below the nav bar */}
+        <View style={styles.screenContainer}>
+          {TABS.map((tab) => (
+            <View
+              key={tab.key}
+              style={[
+                styles.screenSlot,
+                activeTab === tab.key ? styles.screenVisible : styles.screenHidden,
+              ]}
+              pointerEvents={activeTab === tab.key ? 'auto' : 'none'}
+            >
+              {tabComponents[tab.key]}
+            </View>
+          ))}
+        </View>
+      </SafeAreaView>
+    </TabNavigationContext.Provider>
   );
 };
 
@@ -252,38 +290,29 @@ const styles = StyleSheet.create({
   },
 
   tabIconWrap: { position: 'relative' },
-  tabEmoji: { fontSize: 18, opacity: 0.6 },
-  tabEmojiFocused: { fontSize: 20, opacity: 1 },
+  tabEmoji:        { fontSize: 18, opacity: 0.6 },
+  tabEmojiFocused: { fontSize: 20, opacity: 1   },
 
   badge: {
     position: 'absolute',
-    top: -4,
-    right: -8,
+    top: -4, right: -8,
     backgroundColor: Colors.accent,
     borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+    minWidth: 16, height: 16,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
   },
   badgeText: { color: Colors.white, fontSize: 9, fontWeight: '700' },
 
-  tabLabel: {
-    fontSize: 10,
-    marginTop: 2,
-    fontWeight: '400',
-    color: 'rgba(255,255,255,0.55)',
-  },
+  tabLabel:        { fontSize: 10, marginTop: 2, fontWeight: '400', color: 'rgba(255,255,255,0.55)' },
   tabLabelFocused: { fontWeight: '700', color: Colors.white },
 
   screenContainer: {
     flex: 1,
     backgroundColor: Colors.background ?? '#F7F9FC',
   },
-  screenSlot: {
-    ...StyleSheet.absoluteFillObject,
-  },
+  screenSlot:    { ...StyleSheet.absoluteFillObject },
   screenVisible: { zIndex: 1, opacity: 1 },
   screenHidden:  { zIndex: 0, opacity: 0 },
 });
