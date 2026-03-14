@@ -62,8 +62,7 @@ class Product(models.Model):
     call_for_price = models.BooleanField(default=False)
 
     condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default="new")
-    status = models.ChoiceField = models.CharField(max_length=20, choices=STATUS_CHOICES, default="available")
-
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="available")
     # Specifications stored as JSON for flexibility
     specifications = models.JSONField(default=dict, blank=True)
 
