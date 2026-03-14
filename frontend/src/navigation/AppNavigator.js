@@ -149,11 +149,13 @@ const TABS = [
 const TopNavBar = ({ activeTab, onTabPress, favoriteCount }) => (
   <View style={styles.navBar}>
     <View style={styles.brandStrip}>
-      <Image
-        source={require('../../assets/MM-Logo-LB.webp')}
-        style={styles.brandLogoImg}
-        resizeMode="contain"
-      />
+      <TouchableOpacity onPress={() => onTabPress('Home')} activeOpacity={0.7}>
+        <Image
+          source={require('../../assets/MM-Logo-DB.webp')}
+          style={styles.brandLogoImg}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
     </View>
     <View style={styles.tabRow}>
       {TABS.map((tab) => {
@@ -266,12 +268,13 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.xs,
     gap: Spacing.sm,
+    backgroundColor: Colors.white,
   },
   
   brandLogo: { fontSize: 22 },
   brandLogoImg: {
-    width: 250,
-    height: 60,
+    width: 400,
+    height: 120,
   },
   
   brandName: {

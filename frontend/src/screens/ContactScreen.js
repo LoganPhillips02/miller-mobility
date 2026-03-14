@@ -88,142 +88,142 @@ const ContactScreen = () => {
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.scroll}>
 
-          {activeTab === 'contact' ? (
-            <View>
-              <View style={styles.heroSection}>
-                <Text style={styles.heroTitle}>Get in Touch</Text>
-                <Text style={styles.heroSub}>Our team is ready to help you find the right mobility solution.</Text>
+            {activeTab === 'contact' ? (
+              <View>
+                <View style={styles.heroSection}>
+                  <Text style={styles.heroTitle}>Get in Touch</Text>
+                  <Text style={styles.heroSub}>Our team is ready to help you find the right mobility solution.</Text>
+                </View>
+
+                {CONTACT_ITEMS.map(({ icon, label, value, action }) => (
+                  <TouchableOpacity
+                    key={label}
+                    style={styles.contactCard}
+                    onPress={action}
+                    disabled={!action}
+                    activeOpacity={action ? 0.7 : 1}
+                  >
+                    <Text style={styles.contactIcon}>{icon}</Text>
+                    <View style={styles.contactInfo}>
+                      <Text style={styles.contactLabel}>{label}</Text>
+                      <Text style={[styles.contactValue, action && styles.contactValueLink]}>{value}</Text>
+                    </View>
+                    {action && <Text style={styles.contactArrow}>›</Text>}
+                  </TouchableOpacity>
+                ))}
+
+                <Divider style={{ marginTop: Spacing.xl }} />
+
+                <View style={styles.tradeInPromo}>
+                  <Text style={styles.tradeInPromoTitle}>Have a Vehicle to Trade?</Text>
+                  <Text style={styles.tradeInPromoText}>Get a free trade-in estimate. Tap Trade-In above to get started.</Text>
+                  <TouchableOpacity onPress={() => setActiveTab('tradein')} style={styles.tradeInPromoButton}>
+                    <Text style={styles.tradeInPromoButtonText}>Start Trade-In Estimate →</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              {CONTACT_ITEMS.map(({ icon, label, value, action }) => (
-                <TouchableOpacity
-                  key={label}
-                  style={styles.contactCard}
-                  onPress={action}
-                  disabled={!action}
-                  activeOpacity={action ? 0.7 : 1}
-                >
-                  <Text style={styles.contactIcon}>{icon}</Text>
-                  <View style={styles.contactInfo}>
-                    <Text style={styles.contactLabel}>{label}</Text>
-                    <Text style={[styles.contactValue, action && styles.contactValueLink]}>{value}</Text>
-                  </View>
-                  {action && <Text style={styles.contactArrow}>›</Text>}
-                </TouchableOpacity>
-              ))}
-
-              <Divider style={{ marginTop: Spacing.xl }} />
-
-              <View style={styles.tradeInPromo}>
-                <Text style={styles.tradeInPromoTitle}>Have a Vehicle to Trade?</Text>
-                <Text style={styles.tradeInPromoText}>Get a free trade-in estimate. Tap Trade-In above to get started.</Text>
-                <TouchableOpacity onPress={() => setActiveTab('tradein')} style={styles.tradeInPromoButton}>
-                  <Text style={styles.tradeInPromoButtonText}>Start Trade-In Estimate →</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-          ) : submitted ? (
-            <View style={styles.successContainer}>
-              <Text style={styles.successIcon}>🎉</Text>
-              <Text style={styles.successTitle}>Request Submitted!</Text>
-              <Text style={styles.successText}>We'll review your trade-in information and reach out within 1 business day.</Text>
-              <PrimaryButton
-                title="Submit Another"
-                onPress={() => { setForm(createTradeInRequest()); setSubmitted(false); }}
-                style={{ marginTop: Spacing.xl }}
-              />
-            </View>
-
-          ) : (
-            <View>
-              <View style={styles.heroSection}>
-                <Text style={styles.heroTitle}>Trade-In Estimate</Text>
-                <Text style={styles.heroSub}>Tell us about your current vehicle and we'll provide a free estimate.</Text>
-              </View>
-
-              <Text style={styles.sectionTitle}>Your Vehicle</Text>
-
-              <View style={styles.row3}>
-                <Field label="Year" required>
-                  <Input placeholder="2019" value={form.year} onChangeText={update('year')} keyboardType="numeric" maxLength={4} style={styles.inputSmall} />
-                </Field>
-                <Field label="Make" required style={{ flex: 2 }}>
-                  <Input placeholder="Toyota" value={form.make} onChangeText={update('make')} />
-                </Field>
-              </View>
-
-              <Field label="Model" required>
-                <Input placeholder="Sienna" value={form.model} onChangeText={update('model')} />
-              </Field>
-
-              <Field label="Mileage">
-                <Input placeholder="45,000" value={form.mileage} onChangeText={update('mileage')} keyboardType="numeric" />
-              </Field>
-
-              <Field label="Condition Notes">
-                <Input
-                  placeholder="Describe any issues, modifications, or conversion features…"
-                  value={form.conditionNotes}
-                  onChangeText={update('conditionNotes')}
-                  multiline
-                  numberOfLines={3}
-                  style={styles.textarea}
+            ) : submitted ? (
+              <View style={styles.successContainer}>
+                <Text style={styles.successIcon}>🎉</Text>
+                <Text style={styles.successTitle}>Request Submitted!</Text>
+                <Text style={styles.successText}>We'll review your trade-in information and reach out within 1 business day.</Text>
+                <PrimaryButton
+                  title="Submit Another"
+                  onPress={() => { setForm(createTradeInRequest()); setSubmitted(false); }}
+                  style={{ marginTop: Spacing.xl }}
                 />
-              </Field>
-
-              <Divider />
-
-              <Text style={styles.sectionTitle}>Your Contact Info</Text>
-
-              <View style={styles.row2}>
-                <Field label="First Name" required style={{ flex: 1 }}>
-                  <Input placeholder="Jane" value={form.firstName} onChangeText={update('firstName')} />
-                </Field>
-                <Field label="Last Name" required style={{ flex: 1 }}>
-                  <Input placeholder="Smith" value={form.lastName} onChangeText={update('lastName')} />
-                </Field>
               </View>
 
-              <Field label="Email" required>
-                <Input placeholder="jane@example.com" value={form.email} onChangeText={update('email')} keyboardType="email-address" autoCapitalize="none" />
-              </Field>
+            ) : (
+              <View>
+                <View style={styles.heroSection}>
+                  <Text style={styles.heroTitle}>Trade-In Estimate</Text>
+                  <Text style={styles.heroSub}>Tell us about your current vehicle and we'll provide a free estimate.</Text>
+                </View>
 
-              <Field label="Phone" required>
-                <Input placeholder="(555) 555-5555" value={form.phone} onChangeText={update('phone')} keyboardType="phone-pad" />
-              </Field>
+                <Text style={styles.sectionTitle}>Your Vehicle</Text>
 
-              <Field label="ZIP Code">
-                <Input placeholder="53201" value={form.zipCode} onChangeText={update('zipCode')} keyboardType="numeric" maxLength={5} />
-              </Field>
+                <View style={styles.row3}>
+                  <Field label="Year" required>
+                    <Input placeholder="2019" value={form.year} onChangeText={update('year')} keyboardType="numeric" maxLength={4} style={styles.inputSmall} />
+                  </Field>
+                  <Field label="Make" required style={{ flex: 2 }}>
+                    <Input placeholder="Toyota" value={form.make} onChangeText={update('make')} />
+                  </Field>
+                </View>
 
-              <Field label="Additional Notes">
-                <Input
-                  placeholder="What vehicle are you interested in getting?"
-                  value={form.notes}
-                  onChangeText={update('notes')}
-                  multiline
-                  numberOfLines={3}
-                  style={styles.textarea}
+                <Field label="Model" required>
+                  <Input placeholder="Sienna" value={form.model} onChangeText={update('model')} />
+                </Field>
+
+                <Field label="Mileage">
+                  <Input placeholder="45,000" value={form.mileage} onChangeText={update('mileage')} keyboardType="numeric" />
+                </Field>
+
+                <Field label="Condition Notes">
+                  <Input
+                    placeholder="Describe any issues, modifications, or conversion features…"
+                    value={form.conditionNotes}
+                    onChangeText={update('conditionNotes')}
+                    multiline
+                    numberOfLines={3}
+                    style={styles.textarea}
+                  />
+                </Field>
+
+                <Divider />
+
+                <Text style={styles.sectionTitle}>Your Contact Info</Text>
+
+                <View style={styles.row2}>
+                  <Field label="First Name" required style={{ flex: 1 }}>
+                    <Input placeholder="Jane" value={form.firstName} onChangeText={update('firstName')} />
+                  </Field>
+                  <Field label="Last Name" required style={{ flex: 1 }}>
+                    <Input placeholder="Smith" value={form.lastName} onChangeText={update('lastName')} />
+                  </Field>
+                </View>
+
+                <Field label="Email" required>
+                  <Input placeholder="jane@example.com" value={form.email} onChangeText={update('email')} keyboardType="email-address" autoCapitalize="none" />
+                </Field>
+
+                <Field label="Phone" required>
+                  <Input placeholder="(555) 555-5555" value={form.phone} onChangeText={update('phone')} keyboardType="phone-pad" />
+                </Field>
+
+                <Field label="ZIP Code">
+                  <Input placeholder="53201" value={form.zipCode} onChangeText={update('zipCode')} keyboardType="numeric" maxLength={5} />
+                </Field>
+
+                <Field label="Additional Notes">
+                  <Input
+                    placeholder="What vehicle are you interested in getting?"
+                    value={form.notes}
+                    onChangeText={update('notes')}
+                    multiline
+                    numberOfLines={3}
+                    style={styles.textarea}
+                  />
+                </Field>
+
+                <PrimaryButton
+                  title="Submit Trade-In Request"
+                  onPress={handleSubmit}
+                  loading={submitting}
+                  style={{ marginTop: Spacing.lg, marginBottom: Spacing['3xl'] }}
                 />
-              </Field>
+              </View>
+            )}
+          </View>
 
-              <PrimaryButton
-                title="Submit Trade-In Request"
-                onPress={handleSubmit}
-                loading={submitting}
-                style={{ marginTop: Spacing.lg, marginBottom: Spacing['3xl'] }}
-              />
-            </View>
-          )}
-
-          {/* ── Fix: was <SiteFooter navigation={navigation} /> which crashed ──
-              navigation was never in scope — ContactScreen doesn't receive it.
-              Now uses switchTab from TabNavigationContext instead.            */}
+          {/* Footer */}
           <SiteFooter onTabPress={switchTab} />
-
+          
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

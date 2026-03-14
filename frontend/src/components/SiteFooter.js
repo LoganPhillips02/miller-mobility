@@ -6,18 +6,16 @@
  *   onTabPress(tabKey)  — from useTabNavigation().switchTab, passed in by each screen
  */
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Linking, Image } from 'react-native';
 import { Colors, Typography, Spacing } from '../constants/theme';
 
-const FOOTER_LINKS = [
-  { label: 'Home',                           tab: 'Home' },
-  { label: 'Wheelchair Accessible Vehicles', tab: 'Inventory' },
-  { label: 'Power Wheelchairs',              tab: 'Inventory' },
-  { label: 'Mobility Scooters',              tab: 'Inventory' },
-  { label: 'Vehicle Lifts & Ramps',          tab: 'Inventory' },
-  { label: 'Deals & Financing',              tab: 'Deals' },
-  { label: 'Contact Us',                     tab: 'Contact' },
-  { label: 'Privacy Policy',                 url: 'https://www.millermobility.com/privacy' },
+const SOCIAL_LINKS = [
+  { logo: require('../../assets/Facebook-Logo.png'), url: 'https://www.facebook.com/millermobility/', },
+  { logo: require('../../assets/Instagram-Logo.webp'), url: 'https://www.instagram.com/millermobilitywi', },
+  { logo: require('../../assets/Youtube-Logo.png'), url: 'https://www.youtube.com/@MillerMobility', },
+  { logo: require('../../assets/Google-Logo.webp'), url: 'https://www.google.com/maps/place/Miller+Mobility+Products,+Inc/@43.0615539,-88.4685821,17z/data=!4m6!3m5!1s0x8805af487b7a9977:0xa87616f7fcb38223!8m2!3d43.0615539!4d-88.4685821!16s%2Fg%2F1tdp10v5?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D', },
+  { logo: require('../../assets/HA-Logo.png'), url: 'https://www.homeadvisor.com/rated.MillerMobilityProducts.62162732.html', },
+  { logo: require('../../assets/BBB-Logo.png'), url: 'https://www.bbb.org/us/wi/oconomowoc/profile/wheelchair-ramps/miller-mobility-products-inc-0694-17001935#bbbonlineclick', },
 ];
 
 const SiteFooter = ({ onTabPress }) => (
@@ -46,19 +44,21 @@ const SiteFooter = ({ onTabPress }) => (
 
       <View style={styles.divider} />
 
-      {/* ── Right: nav links ── */}
+      {/* ── Right: social & reviews ── */}
       <View style={styles.linksColumn}>
-        <Text style={styles.linksHeading}>QUICK LINKS</Text>
-        {FOOTER_LINKS.map((link) => (
-          <TouchableOpacity
-            key={link.label}
-            style={styles.linkRow}
-            onPress={() => link.url ? Linking.openURL(link.url) : onTabPress?.(link.tab)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.linkText}>{link.label}</Text>
-          </TouchableOpacity>
-        ))}
+        <Text style={styles.linksHeading}>CONNECT WITH US</Text>
+        <View style={styles.linksGrid}>
+          {SOCIAL_LINKS.map((link) => (
+            <TouchableOpacity
+              key={link.logo}
+              style={styles.linkGridItem}
+              onPress={() => Linking.openURL(link.url)}
+              activeOpacity={0.7}
+            >
+              <Image source={link.logo} style={styles.linkLogo} resizeMode="contain" />
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
     </View>
 
@@ -85,8 +85,11 @@ const styles = StyleSheet.create({
   divider:      { width: StyleSheet.hairlineWidth, backgroundColor: 'rgba(255,255,255,0.15)', alignSelf: 'stretch' },
   linksColumn:  { flex: 1, paddingLeft: Spacing.sm },
   linksHeading: { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.heavy, color: Colors.accent ?? '#E63946', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: Spacing.md },
-  linkRow:      { paddingVertical: Spacing.xs + 2 },
-  linkText:     { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.75)', fontWeight: Typography.weights.medium },
+  linksGrid:    { flexDirection: 'row', flexWrap: 'wrap' },
+  linkGridItem: { width: '50%', flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.xs + 2, gap: Spacing.xl, paddingRight: Spacing.xl },
+  linkLogo:     { width: 40, height: 40 },
+  linkText:     { fontSize: Typography.sizes.xs, color: 'rgba(255,255,255,0.75)', fontWeight: Typography.weights.medium, flexShrink: 1 },
+  linkRow:      { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.xs + 2, gap: Spacing.sm },
   bottomBar:    { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.15)', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
   copyright:    { fontSize: Typography.sizes.xs, color: 'rgba(255,255,255,0.4)', textAlign: 'center' },
 });
