@@ -3,6 +3,7 @@ import {
   View,
   Text,
   FlatList,
+  ScrollView,
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
@@ -19,7 +20,7 @@ const FavoritesScreen = () => {
   const { switchTab } = useTabNavigation();
   const { favoriteIds, favoriteCount, clearFavorites } = useFavorites();
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
     if (favoriteIds.size === 0) { setProducts([]); setLoading(false); return; }
@@ -29,6 +30,32 @@ const FavoritesScreen = () => {
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
   }, [favoriteIds]);
+
+  const renderBody = () => {
+    if (loading) return <LoadingSpinner full />;
+    if (products.length === 0) return (
+      <EmptyState
+        icon="🚐"
+        title="No saved vehicles"
+        message="Tap the heart icon on any product to save it here for later."
+        action="Browse Inventory"
+        onAction={() => switchTab('Inventory')}
+      />
+    );
+    return (
+      <FlatList
+        data={products}
+        keyExtractor={(item) => item.id?.toString()}
+        numColumns={2}
+        contentContainerStyle={styles.grid}
+        columnWrapperStyle={styles.row}
+        renderItem={({ item }) => (
+          <ProductCard product={item} style={styles.card} onPress={() => switchTab('Inventory')} />
+        )}
+        scrollEnabled={false}
+      />
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -41,45 +68,23 @@ const FavoritesScreen = () => {
         )}
       </View>
 
-      {loading ? (
-        <LoadingSpinner full />
-      ) : products.length === 0 ? (
-        <EmptyState
-          icon="🚐"
-          title="No saved vehicles"
-          message="Tap the heart icon on any product to save it here for later."
-          action="Browse Inventory"
-          onAction={() => switchTab('Inventory')}
-        />
-      ) : (
-        <FlatList
-          data={products}
-          keyExtractor={(item) => item.id?.toString()}
-          numColumns={2}
-          contentContainerStyle={styles.grid}
-          columnWrapperStyle={styles.row}
-          renderItem={({ item }) => (
-            <ProductCard
-              product={item}
-              style={styles.card}
-              onPress={() => switchTab('Inventory')}
-            />
-          )}
-          ListFooterComponent={<SiteFooter onTabPress={switchTab} />}
-        />
-      )}
+      {/* Outer ScrollView ensures footer is always reachable */}
+      <ScrollView>
+        {renderBody()}
+        <SiteFooter onTabPress={switchTab} />
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  header: { backgroundColor: Colors.primary, paddingHorizontal: Spacing.base, paddingVertical: Spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerTitle: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.white },
-  clearText: { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.7)', fontWeight: Typography.weights.medium },
-  grid: { padding: Spacing.base },
-  row: { justifyContent: 'space-between', marginBottom: Spacing.md },
-  card: { width: '48.5%' },
+  safe:       { flex: 1, backgroundColor: Colors.background },
+  header:     { backgroundColor: Colors.primary, paddingHorizontal: Spacing.base, paddingVertical: Spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerTitle:{ fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.white },
+  clearText:  { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.7)', fontWeight: Typography.weights.medium },
+  grid:       { padding: Spacing.base },
+  row:        { justifyContent: 'space-between', marginBottom: Spacing.md },
+  card:       { width: '48.5%' },
 });
 
 export default FavoritesScreen;

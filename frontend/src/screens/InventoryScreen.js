@@ -18,17 +18,17 @@ import { LoadingSpinner, ErrorView, EmptyState, Chip } from '../components/ui';
 import { useTabNavigation } from '../navigation/TabNavigationContext';
 
 const CONDITIONS = [
-  { label: 'All', value: '' },
-  { label: 'New', value: 'new' },
-  { label: 'Used', value: 'used' },
+  { label: 'All',       value: '' },
+  { label: 'New',       value: 'new' },
+  { label: 'Used',      value: 'used' },
   { label: 'Certified', value: 'certified' },
 ];
 
 const InventoryScreen = ({ navigation, route }) => {
   const { switchTab } = useTabNavigation();
   const initialCategory = route.params?.category ?? '';
-  const [search, setSearch] = useState('');
-  const [searchFocused, setSearchFocused] = useState(false);
+  const [search, setSearch]                   = useState('');
+  const [searchFocused, setSearchFocused]     = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedCondition, setSelectedCondition] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -44,30 +44,65 @@ const InventoryScreen = ({ navigation, route }) => {
   }, [search]);
 
   useEffect(() => {
-    if (route.params?.category !== undefined) {
-      setSelectedCategory(route.params.category);
-    }
+    if (route.params?.category !== undefined) setSelectedCategory(route.params.category);
   }, [route.params?.category]);
 
   const filters = {
-    ...(selectedCategory && { category: selectedCategory }),
+    ...(selectedCategory  && { category:  selectedCategory }),
     ...(selectedCondition && { condition: selectedCondition }),
-    ...(debouncedSearch && { search: debouncedSearch }),
+    ...(debouncedSearch   && { search:    debouncedSearch }),
   };
 
   const { products, loading, error, hasMore, loadMore, refresh } = useProducts(filters);
   const { categories } = useCategories();
   const allCategories = [{ id: '__all', slug: '', name: 'All' }, ...categories];
 
-  const handleProductPress = (product) => {
+  const handleProductPress = (product) =>
     navigation.navigate('ProductDetail', { id: product.id, name: product.name });
+
+  const clearFilters = () => {
+    setSearch(''); setDebouncedSearch('');
+    setSelectedCategory(''); setSelectedCondition('');
   };
 
   const showSuggestions = searchFocused && search.length === 0 && recentSearches.length > 0;
 
+  // ── Build the content body (list or empty/error state) ──────────────────────
+  // We keep the footer OUTSIDE this so it always appears regardless of state.
+  const renderBody = () => {
+    if (error) return <ErrorView message={error} onRetry={refresh} />;
+    if (loading && products.length === 0) return <LoadingSpinner full />;
+    if (products.length === 0) return (
+      <EmptyState
+        icon="🔍"
+        title="No products found"
+        message="Try adjusting your filters or search term."
+        action="Clear Filters"
+        onAction={clearFilters}
+      />
+    );
+    return (
+      <FlatList
+        data={products}
+        keyExtractor={(item) => item.id?.toString()}
+        numColumns={2}
+        contentContainerStyle={styles.grid}
+        columnWrapperStyle={styles.row}
+        renderItem={({ item }) => (
+          <ProductCard product={item} style={styles.card} onPress={handleProductPress} />
+        )}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.4}
+        ListFooterComponent={hasMore ? <LoadingSpinner size="small" /> : null}
+        // Disable scroll on the FlatList — the outer ScrollView handles it
+        scrollEnabled={false}
+      />
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Search bar */}
+      {/* Fixed filters header */}
       <View style={styles.searchBar}>
         <TextInput
           style={styles.searchInput}
@@ -86,7 +121,6 @@ const InventoryScreen = ({ navigation, route }) => {
         )}
       </View>
 
-      {/* Recent search suggestions */}
       {showSuggestions && (
         <View style={styles.suggestions}>
           {recentSearches.slice(0, 5).map((term) => (
@@ -105,7 +139,6 @@ const InventoryScreen = ({ navigation, route }) => {
         </View>
       )}
 
-      {/* Category filter */}
       <View style={styles.filterRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterList}>
           {allCategories.map((cat) => (
@@ -119,7 +152,6 @@ const InventoryScreen = ({ navigation, route }) => {
         </ScrollView>
       </View>
 
-      {/* Condition + count */}
       <View style={styles.conditionRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterList}>
           {CONDITIONS.map((c) => (
@@ -135,64 +167,32 @@ const InventoryScreen = ({ navigation, route }) => {
         <Text style={styles.resultCount}>{loading ? '…' : `${products.length} results`}</Text>
       </View>
 
-      {/* Results */}
-      {error ? (
-        <ErrorView message={error} onRetry={refresh} />
-      ) : loading && products.length === 0 ? (
-        <LoadingSpinner full />
-      ) : products.length === 0 ? (
-        <EmptyState
-          icon="🔍"
-          title="No products found"
-          message="Try adjusting your filters or search term."
-          action="Clear Filters"
-          onAction={() => { setSearch(''); setDebouncedSearch(''); setSelectedCategory(''); setSelectedCondition(''); }}
-        />
-      ) : (
-        <FlatList
-          data={products}
-          keyExtractor={(item) => item.id?.toString()}
-          numColumns={2}
-          contentContainerStyle={styles.grid}
-          columnWrapperStyle={styles.row}
-          renderItem={({ item }) => (
-            <ProductCard
-              product={item}
-              style={styles.card}
-              onPress={handleProductPress}
-            />
-          )}
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.4}
-          ListFooterComponent={
-            <>
-              {hasMore && <LoadingSpinner size="small" />}
-              <SiteFooter onTabPress={switchTab} />
-            </>
-          }
-        />
-      )}
+      {/* Outer ScrollView ensures footer is always reachable */}
+      <ScrollView>
+        {renderBody()}
+        <SiteFooter onTabPress={switchTab} />
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: Spacing.sm },
-  searchInput: { flex: 1, fontSize: Typography.sizes.base, color: Colors.black, paddingVertical: Spacing.sm },
-  clearBtn: { fontSize: 16, color: Colors.gray400, paddingHorizontal: Spacing.sm },
-  suggestions: { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  suggestionRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, gap: Spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
+  safe:           { flex: 1, backgroundColor: Colors.background },
+  searchBar:      { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: Spacing.sm },
+  searchInput:    { flex: 1, fontSize: Typography.sizes.base, color: Colors.black, paddingVertical: Spacing.sm },
+  clearBtn:       { fontSize: 16, color: Colors.gray400, paddingHorizontal: Spacing.sm },
+  suggestions:    { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  suggestionRow:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, gap: Spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
   suggestionIcon: { fontSize: 14 },
   suggestionText: { flex: 1, fontSize: Typography.sizes.base, color: Colors.black },
   suggestionRemove: { fontSize: 12, color: Colors.gray400 },
-  filterRow: { backgroundColor: Colors.surface, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  conditionRow: { backgroundColor: Colors.surface, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border, flexDirection: 'row', alignItems: 'center' },
-  filterList: { paddingHorizontal: Spacing.base, flexGrow: 0 },
-  resultCount: { fontSize: Typography.sizes.sm, color: Colors.gray400, paddingRight: Spacing.base, minWidth: 70, textAlign: 'right' },
-  grid: { padding: Spacing.base },
-  row: { justifyContent: 'space-between', marginBottom: Spacing.md },
-  card: { width: '48.5%' },
+  filterRow:      { backgroundColor: Colors.surface, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  conditionRow:   { backgroundColor: Colors.surface, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border, flexDirection: 'row', alignItems: 'center' },
+  filterList:     { paddingHorizontal: Spacing.base, flexGrow: 0 },
+  resultCount:    { fontSize: Typography.sizes.sm, color: Colors.gray400, paddingRight: Spacing.base, minWidth: 70, textAlign: 'right' },
+  grid:           { padding: Spacing.base },
+  row:            { justifyContent: 'space-between', marginBottom: Spacing.md },
+  card:           { width: '48.5%' },
 });
 
 export default InventoryScreen;
