@@ -1,0 +1,21 @@
+# Core
+Django>=6.0.3,<7.0
+djangorestframework>=3.15,<4.0
+ 
+# Database
+# Uncomment for production PostgreSQL:
+# psycopg2-binary>=2.9
+ 
+# API utilities
+django-cors-headers>=4.3
+django-filter>=24.0
+ 
+# Image handling (required for ImageField)
+Pillow>=10.0
+ 
+# Environment variables
+python-dotenv>=1.0
+ 
+# Production server (uncomment for deployment)
+# gunicorn>=21.0
+# whitenoise>=6.6
