@@ -15,6 +15,7 @@ import { useDeals } from '../hooks/useDeals';
 import ProductCard from '../components/ProductCard';
 import DealCard from '../components/DealCard';
 import { SectionHeader, LoadingSpinner, Badge } from '../components/ui';
+import SiteFooter from '../components/SiteFooter';
 
 const CATEGORY_ICONS = {
   'wheelchair-accessible-vehicles': '🚐',
@@ -170,6 +171,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         <View style={{ height: Spacing['2xl'] }} />
+        <SiteFooter navigation={navigation} />
       </ScrollView>
     </SafeAreaView>
   );

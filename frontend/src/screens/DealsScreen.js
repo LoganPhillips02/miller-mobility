@@ -10,6 +10,7 @@ import { Colors, Typography, Spacing } from '../constants/theme';
 import { useDeals } from '../hooks/useDeals';
 import DealCard from '../components/DealCard';
 import { LoadingSpinner, ErrorView, EmptyState } from '../components/ui';
+import SiteFooter from '../components/SiteFooter';
 
 const DealsScreen = ({ navigation }) => {
   const { deals, loading, error, refresh } = useDeals();
@@ -45,6 +46,7 @@ const DealsScreen = ({ navigation }) => {
           onRefresh={refresh}
           refreshing={loading && deals.length > 0}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.md }} />}
+          ListFooterComponent={<SiteFooter navigation={navigation} />}
         />
       )}
     </SafeAreaView>

@@ -14,6 +14,7 @@ import { useProducts, useCategories } from '../hooks/useProducts';
 import { useSearch } from '../hooks/useSearch';
 import ProductCard from '../components/ProductCard';
 import { LoadingSpinner, ErrorView, EmptyState, Chip } from '../components/ui';
+import SiteFooter from '../components/SiteFooter';
 
 const CONDITIONS = [
   { label: 'All', value: '' },
@@ -189,10 +190,10 @@ const InventoryScreen = ({ navigation, route }) => {
           )}
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
-          ListFooterComponent={hasMore ? <LoadingSpinner size="small" /> : null}
           onRefresh={refresh}
           refreshing={loading && products.length > 0}
           keyboardShouldPersistTaps="handled"
+          ListFooterComponent={<SiteFooter navigation={navigation} />}
         />
       )}
     </SafeAreaView>

@@ -13,6 +13,7 @@ import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme
 import { useDeal } from '../hooks/useDeals';
 import { dealBadgeText } from '../models';
 import { LoadingSpinner, ErrorView, Divider, PrimaryButton } from '../components/ui';
+import SiteFooter from '../components/SiteFooter';
 
 const InfoRow = ({ label, value }) => (
   <View style={styles.infoRow}>
@@ -128,6 +129,7 @@ const DealDetailScreen = ({ route, navigation }) => {
             </TouchableOpacity>
           )}
         </View>
+        <SiteFooter navigation={navigation} />
       </ScrollView>
 
       {/* Sticky CTA */}

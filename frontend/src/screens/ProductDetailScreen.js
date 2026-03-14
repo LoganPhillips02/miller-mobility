@@ -14,6 +14,7 @@ import {
 import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
 import { useProduct } from '../hooks/useProducts';
 import { LoadingSpinner, ErrorView, ConditionBadge, StatusBadge, Divider, PrimaryButton } from '../components/ui';
+import SiteFooter from '../components/SiteFooter';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -171,6 +172,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
             </View>
           )}
         </View>
+        <SiteFooter navigation={navigation} />
       </ScrollView>
 
       {/* Sticky Footer CTA */}

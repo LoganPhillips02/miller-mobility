@@ -12,6 +12,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import { productsService } from '../services/api';
 import ProductCard from '../components/ProductCard';
 import { LoadingSpinner, EmptyState } from '../components/ui';
+import SiteFooter from '../components/SiteFooter';
 
 const FavoritesScreen = ({ navigation }) => {
   const { favoriteIds, favoriteCount, clearFavorites } = useFavorites();
@@ -74,6 +75,7 @@ const FavoritesScreen = ({ navigation }) => {
               }
             />
           )}
+          ListFooterComponent={<SiteFooter navigation={navigation} />}
         />
       )}
     </SafeAreaView>

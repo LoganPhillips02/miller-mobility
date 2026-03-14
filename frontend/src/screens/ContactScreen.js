@@ -16,6 +16,7 @@ import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme
 import { dealsService } from '../services/api';
 import { createTradeInRequest, tradeInToPayload } from '../models';
 import { PrimaryButton, Divider } from '../components/ui';
+import SiteFooter from '../components/SiteFooter';
 
 const CONTACT_ITEMS = [
   { icon: '📞', label: 'Call Us', value: '(XXX) XXX-XXXX', action: () => Linking.openURL('tel:+1XXXXXXXXXX') },
@@ -255,6 +256,7 @@ const ContactScreen = () => {
               />
             </View>
           )}
+        <SiteFooter navigation={navigation} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
