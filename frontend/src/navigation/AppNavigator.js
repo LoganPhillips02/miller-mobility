@@ -32,6 +32,7 @@ import {
   View,
   TouchableOpacity,
   StyleSheet,
+  Image,
   SafeAreaView,
   StatusBar,
 } from 'react-native';
@@ -148,8 +149,11 @@ const TABS = [
 const TopNavBar = ({ activeTab, onTabPress, favoriteCount }) => (
   <View style={styles.navBar}>
     <View style={styles.brandStrip}>
-      <Text style={styles.brandLogo}>♿</Text>
-      <Text style={styles.brandName}>Miller Mobility</Text>
+      <Image
+        source={require('../../assets/MM-Logo-LB.webp')}
+        style={styles.brandLogoImg}
+        resizeMode="contain"
+      />
     </View>
     <View style={styles.tabRow}>
       {TABS.map((tab) => {
@@ -184,7 +188,7 @@ const TopNavBar = ({ activeTab, onTabPress, favoriteCount }) => (
 
 // ─── Root App Navigator ───────────────────────────────────────────────────────
 const AppNavigator = () => {
-  const [activeTab, setActiveTab]         = useState('Home');
+  const [activeTab, setActiveTab] = useState('Home');
   const [inventoryParams, setInventoryParams] = useState(null);
   const { favoriteCount } = useFavorites();
 
@@ -263,7 +267,13 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xs,
     gap: Spacing.sm,
   },
+  
   brandLogo: { fontSize: 22 },
+  brandLogoImg: {
+    width: 250,
+    height: 60,
+  },
+  
   brandName: {
     fontSize: Typography.sizes.lg,
     fontWeight: Typography.weights.heavy,
