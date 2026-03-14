@@ -9,8 +9,9 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
-import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
+import { Colors, Typography, Spacing, Radius } from '../constants/theme';
 import { useProducts, useCategories } from '../hooks/useProducts';
+import { useSearch } from '../hooks/useSearch';
 import ProductCard from '../components/ProductCard';
 import { LoadingSpinner, ErrorView, EmptyState, Chip } from '../components/ui';
 
@@ -24,17 +25,23 @@ const CONDITIONS = [
 const InventoryScreen = ({ navigation, route }) => {
   const initialCategory = route.params?.category ?? '';
   const [search, setSearch] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedCondition, setSelectedCondition] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  // Debounce search
+  const { recentSearches, saveSearch, removeSearch, clearSearches } = useSearch();
+
+  // Debounce search input
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 400);
+    const t = setTimeout(() => {
+      setDebouncedSearch(search);
+      if (search.trim()) saveSearch(search.trim());
+    }, 500);
     return () => clearTimeout(t);
   }, [search]);
 
-  // Sync category from route params (e.g. tapping a category on Home)
+  // Sync category from route params
   useEffect(() => {
     if (route.params?.category !== undefined) {
       setSelectedCategory(route.params.category);
@@ -56,11 +63,18 @@ const InventoryScreen = ({ navigation, route }) => {
     navigation.navigate('ProductDetail', { id: product.id, name: product.name });
   };
 
+  const applyRecentSearch = (term) => {
+    setSearch(term);
+    setSearchFocused(false);
+  };
+
+  const showSuggestions = searchFocused && search.length === 0 && recentSearches.length > 0;
+
   return (
     <SafeAreaView style={styles.safe}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
+        <View style={[styles.searchBar, searchFocused && styles.searchBarFocused]}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
@@ -68,14 +82,45 @@ const InventoryScreen = ({ navigation, route }) => {
             placeholderTextColor={Colors.gray400}
             value={search}
             onChangeText={setSearch}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
             returnKeyType="search"
+            onSubmitEditing={() => search.trim() && saveSearch(search.trim())}
           />
           {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch('')}>
+            <TouchableOpacity onPress={() => { setSearch(''); setDebouncedSearch(''); }}>
               <Text style={styles.clearIcon}>✕</Text>
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Recent searches dropdown */}
+        {showSuggestions && (
+          <View style={styles.suggestions}>
+            <View style={styles.suggestionsHeader}>
+              <Text style={styles.suggestionsTitle}>Recent Searches</Text>
+              <TouchableOpacity onPress={clearSearches}>
+                <Text style={styles.clearRecentText}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+            {recentSearches.map((term) => (
+              <TouchableOpacity
+                key={term}
+                style={styles.suggestionRow}
+                onPress={() => applyRecentSearch(term)}
+              >
+                <Text style={styles.suggestionIcon}>🕐</Text>
+                <Text style={styles.suggestionText}>{term}</Text>
+                <TouchableOpacity
+                  onPress={() => removeSearch(term)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.suggestionRemove}>✕</Text>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* Category Filter */}
@@ -92,7 +137,7 @@ const InventoryScreen = ({ navigation, route }) => {
         </ScrollView>
       </View>
 
-      {/* Condition Filter */}
+      {/* Condition + count */}
       <View style={styles.conditionRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterList}>
           {CONDITIONS.map((c) => (
@@ -105,7 +150,6 @@ const InventoryScreen = ({ navigation, route }) => {
             />
           ))}
         </ScrollView>
-
         <Text style={styles.resultCount}>
           {loading ? '…' : `${products.length} results`}
         </Text>
@@ -124,6 +168,7 @@ const InventoryScreen = ({ navigation, route }) => {
           action="Clear Filters"
           onAction={() => {
             setSearch('');
+            setDebouncedSearch('');
             setSelectedCategory('');
             setSelectedCondition('');
           }}
@@ -147,6 +192,7 @@ const InventoryScreen = ({ navigation, route }) => {
           ListFooterComponent={hasMore ? <LoadingSpinner size="small" /> : null}
           onRefresh={refresh}
           refreshing={loading && products.length > 0}
+          keyboardShouldPersistTaps="handled"
         />
       )}
     </SafeAreaView>
@@ -161,6 +207,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    zIndex: 10,
   },
   searchBar: {
     flexDirection: 'row',
@@ -172,17 +219,60 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
+  searchBarFocused: {
+    borderColor: Colors.primary,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
   searchIcon: { fontSize: 16, marginRight: Spacing.sm },
-  searchInput: {
+  searchInput: { flex: 1, fontSize: Typography.sizes.base, color: Colors.black },
+  clearIcon: { fontSize: 14, color: Colors.gray400, paddingHorizontal: Spacing.xs },
+  suggestions: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: Colors.primary,
+    borderBottomLeftRadius: Radius.md,
+    borderBottomRightRadius: Radius.md,
+    overflow: 'hidden',
+  },
+  suggestionsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.border,
+  },
+  suggestionsTitle: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.bold,
+    color: Colors.gray600,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  clearRecentText: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.primary,
+    fontWeight: Typography.weights.semibold,
+  },
+  suggestionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
+    gap: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.border,
+  },
+  suggestionIcon: { fontSize: 14 },
+  suggestionText: {
     flex: 1,
     fontSize: Typography.sizes.base,
     color: Colors.black,
   },
-  clearIcon: {
-    fontSize: 14,
-    color: Colors.gray400,
-    paddingHorizontal: Spacing.xs,
-  },
+  suggestionRemove: { fontSize: 12, color: Colors.gray400 },
   filterRow: {
     backgroundColor: Colors.surface,
     paddingVertical: Spacing.sm,
@@ -197,10 +287,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  filterList: {
-    paddingHorizontal: Spacing.base,
-    flexGrow: 0,
-  },
+  filterList: { paddingHorizontal: Spacing.base, flexGrow: 0 },
   resultCount: {
     fontSize: Typography.sizes.sm,
     color: Colors.gray400,
@@ -208,17 +295,9 @@ const styles = StyleSheet.create({
     minWidth: 70,
     textAlign: 'right',
   },
-  grid: {
-    padding: Spacing.base,
-    paddingBottom: Spacing['3xl'],
-  },
-  row: {
-    justifyContent: 'space-between',
-    marginBottom: Spacing.md,
-  },
-  card: {
-    width: '48.5%',
-  },
+  grid: { padding: Spacing.base, paddingBottom: Spacing['3xl'] },
+  row: { justifyContent: 'space-between', marginBottom: Spacing.md },
+  card: { width: '48.5%' },
 });
 
 export default InventoryScreen;
