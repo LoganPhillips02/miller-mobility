@@ -1,31 +1,3 @@
-/**
- * AppNavigator.js
- * Place this file at: src/navigation/AppNavigator.js
- *
- * Architecture
- * ────────────
- * createBottomTabNavigator hard-wires its layout as [screen][tabBar], so the
- * tab bar always ends up at the bottom. To put it at the top we own the layout:
- *
- *   <SafeAreaView>
- *     <TopNavBar />       ← rendered first → physically at the top
- *     <View flex:1>
- *       {tab screens}     ← each in its own independent NavigationContainer
- *     </View>
- *   </SafeAreaView>
- *
- * Because each tab has its own NavigationContainer (independent={true}),
- * cross-tab calls like navigation.navigate('Inventory') won't work through
- * React Navigation. Instead we expose a TabNavigationContext so screens can
- * call switchTab('Inventory') to change the active tab.
- *
- * Screens that need updating (only cross-tab navigate calls):
- *   - HomeScreen          → replace navigation.navigate('Inventory'/'Deals') with switchTab(...)
- *   - FavoritesScreen     → replace navigation.navigate('Inventory') with switchTab('Inventory')
- *   Within-tab navigation (e.g. ProductDetail, DealDetail) still uses the
- *   normal navigation prop and needs no changes.
- */
-
 import React, { useState, useCallback, useRef } from 'react';
 import {
   Text,
@@ -35,6 +7,7 @@ import {
   Image,
   SafeAreaView,
   StatusBar,
+  Linking,
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -44,18 +17,21 @@ import InventoryScreen     from '../screens/InventoryScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
 import DealsScreen         from '../screens/DealsScreen';
 import DealDetailScreen    from '../screens/DealDetailScreen';
-import FavoritesScreen     from '../screens/FavoritesScreen';
 import ContactScreen       from '../screens/ContactScreen';
+import RentalsScreen  from '../screens/RentalsScreen';
+import AboutScreen    from '../screens/AboutScreen';
 
-import { useFavorites }         from '../hooks/useFavorites';
 import { Colors, Typography, Spacing } from '../constants/theme';
 import { TabNavigationContext }  from './TabNavigationContext';
+import { Dimensions } from 'react-native';
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ─── Stack instances ──────────────────────────────────────────────────────────
 const HomeStack      = createStackNavigator();
 const InventoryStack = createStackNavigator();
 const DealsStack     = createStackNavigator();
-const FavStack       = createStackNavigator();
+const RentalsStack   = createStackNavigator();
+const AboutStack     = createStackNavigator();
 const ContactStack   = createStackNavigator();
 
 const stackHeaderOptions = {
@@ -120,11 +96,19 @@ const DealsTab = () => (
   </NavigationContainer>
 );
 
-const FavoritesTab = () => (
+const RentalsTab = () => (
   <NavigationContainer independent={true}>
-    <FavStack.Navigator screenOptions={{ headerShown: false }}>
-      <FavStack.Screen name="FavoritesMain" component={FavoritesScreen} />
-    </FavStack.Navigator>
+    <RentalsStack.Navigator screenOptions={{ headerShown: false }}>
+      <RentalsStack.Screen name="RentalsMain" component={RentalsScreen} />
+    </RentalsStack.Navigator>
+  </NavigationContainer>
+);
+
+const AboutTab = () => (
+  <NavigationContainer independent={true}>
+    <AboutStack.Navigator screenOptions={{ headerShown: false }}>
+      <AboutStack.Screen name="AboutMain" component={AboutScreen} />
+    </AboutStack.Navigator>
   </NavigationContainer>
 );
 
@@ -138,15 +122,15 @@ const ContactTab = () => (
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
 const TABS = [
-  { key: 'Home',      emoji: '🏠', label: 'Home'      },
-  { key: 'Inventory', emoji: '🚐', label: 'Inventory' },
+  { key: 'Inventory', emoji: '🚐', label: 'Products'  },
   { key: 'Deals',     emoji: '🏷️', label: 'Deals'     },
-  { key: 'Favorites', emoji: '❤️', label: 'Saved'     },
+  { key: 'Rentals',   emoji: '🔑', label: 'Rentals'   },
+  { key: 'About',     emoji: 'ℹ️',  label: 'About Us' },
   { key: 'Contact',   emoji: '📞', label: 'Contact'   },
 ];
 
 // ─── Top Navigation Bar ───────────────────────────────────────────────────────
-const TopNavBar = ({ activeTab, onTabPress, favoriteCount }) => (
+const TopNavBar = ({ activeTab, onTabPress }) => (
   <View style={styles.navBar}>
     <View style={styles.brandStrip}>
       <TouchableOpacity onPress={() => onTabPress('Home')} activeOpacity={0.7}>
@@ -156,11 +140,17 @@ const TopNavBar = ({ activeTab, onTabPress, favoriteCount }) => (
           resizeMode="contain"
         />
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.phoneBar}
+        onPress={() => Linking.openURL('tel:+12625494900')}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.phoneBarText}>📞 262-549-4900</Text>
+      </TouchableOpacity>
     </View>
     <View style={styles.tabRow}>
       {TABS.map((tab) => {
         const focused = activeTab === tab.key;
-        const badge   = tab.key === 'Favorites' ? favoriteCount : 0;
         return (
           <TouchableOpacity
             key={tab.key}
@@ -172,11 +162,6 @@ const TopNavBar = ({ activeTab, onTabPress, favoriteCount }) => (
               <Text style={[styles.tabEmoji, focused && styles.tabEmojiFocused]}>
                 {tab.emoji}
               </Text>
-              {badge > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
-                </View>
-              )}
             </View>
             <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
               {tab.label}
@@ -192,13 +177,9 @@ const TopNavBar = ({ activeTab, onTabPress, favoriteCount }) => (
 const AppNavigator = () => {
   const [activeTab, setActiveTab] = useState('Home');
   const [inventoryParams, setInventoryParams] = useState(null);
-  const { favoriteCount } = useFavorites();
 
-  // switchTab is exposed via context so any screen can call it
   const switchTab = useCallback((tabKey, params) => {
-    if (tabKey === 'Inventory' && params) {
-      setInventoryParams(params);
-    }
+    if (tabKey === 'Inventory' && params) setInventoryParams(params);
     setActiveTab(tabKey);
   }, []);
 
@@ -208,7 +189,8 @@ const AppNavigator = () => {
     Home:      <HomeTab />,
     Inventory: <InventoryTab pendingParams={inventoryParams} />,
     Deals:     <DealsTab />,
-    Favorites: <FavoritesTab />,
+    Rentals:   <RentalsTab />,
+    About:     <AboutTab />,
     Contact:   <ContactTab />,
   };
 
@@ -221,21 +203,20 @@ const AppNavigator = () => {
         <TopNavBar
           activeTab={activeTab}
           onTabPress={handleTabPress}
-          favoriteCount={favoriteCount}
         />
 
         {/* SCREEN AREA — fills all space below the nav bar */}
         <View style={styles.screenContainer}>
-          {TABS.map((tab) => (
+          {Object.keys(tabComponents).map((key) => (
             <View
-              key={tab.key}
+              key={key}
               style={[
                 styles.screenSlot,
-                activeTab === tab.key ? styles.screenVisible : styles.screenHidden,
+                activeTab === key ? styles.screenVisible : styles.screenHidden,
+                { pointerEvents: activeTab === key ? 'auto' : 'none' },  // ← move here
               ]}
-              pointerEvents={activeTab === tab.key ? 'auto' : 'none'}
             >
-              {tabComponents[tab.key]}
+              {tabComponents[key]}
             </View>
           ))}
         </View>
@@ -264,17 +245,17 @@ const styles = StyleSheet.create({
   brandStrip: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.xs,
-    gap: Spacing.sm,
+    paddingTop: Spacing.xs,
+    paddingBottom: 0,
     backgroundColor: Colors.white,
   },
-  
+
   brandLogo: { fontSize: 22 },
   brandLogoImg: {
-    width: 400,
-    height: 120,
+    width: SCREEN_WIDTH * 0.65,
+    height: SCREEN_WIDTH * 0.08,
   },
   
   brandName: {
@@ -293,7 +274,7 @@ const styles = StyleSheet.create({
   tabItem: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.xs,
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },
@@ -303,8 +284,8 @@ const styles = StyleSheet.create({
   },
 
   tabIconWrap: { position: 'relative' },
-  tabEmoji:        { fontSize: 18, opacity: 0.6 },
-  tabEmojiFocused: { fontSize: 20, opacity: 1   },
+  tabEmoji: { fontSize: 16, opacity: 0.6 },
+  tabEmojiFocused: { fontSize: 17, opacity: 1 },
 
   badge: {
     position: 'absolute',
@@ -318,7 +299,12 @@ const styles = StyleSheet.create({
   },
   badgeText: { color: Colors.white, fontSize: 9, fontWeight: '700' },
 
-  tabLabel:        { fontSize: 10, marginTop: 2, fontWeight: '400', color: 'rgba(255,255,255,0.55)' },
+  tabLabel: {
+    fontSize: 9,
+    marginTop: 1,
+    fontWeight: '400',
+    color: 'rgba(255,255,255,0.55)',
+  },
   tabLabelFocused: { fontWeight: '700', color: Colors.white },
 
   screenContainer: {
@@ -328,6 +314,19 @@ const styles = StyleSheet.create({
   screenSlot:    { ...StyleSheet.absoluteFillObject },
   screenVisible: { zIndex: 1, opacity: 1 },
   screenHidden:  { zIndex: 0, opacity: 0 },
+
+  phoneBar: {
+    backgroundColor: Colors.white,
+    paddingVertical: 3,
+    paddingBottom: Spacing.xs,
+    alignItems: 'center',
+  },
+
+  phoneBarText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.bold,
+    color: Colors.primary,
+  },
 });
 
 export default AppNavigator;

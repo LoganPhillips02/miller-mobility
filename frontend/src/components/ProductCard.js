@@ -2,11 +2,8 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
 import { ConditionBadge } from './ui';
-import { useFavorites } from '../hooks/useFavorites';
 
 const ProductCard = ({ product, onPress, style }) => {
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const favorited = isFavorite(product.id);
 
   return (
     <TouchableOpacity
@@ -35,15 +32,6 @@ const ProductCard = ({ product, onPress, style }) => {
             <Text style={styles.soldText}>SOLD</Text>
           </View>
         )}
-
-        {/* Favorite button */}
-        <TouchableOpacity
-          style={styles.heartButton}
-          onPress={() => toggleFavorite(product.id)}
-          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-        >
-          <Text style={styles.heartIcon}>{favorited ? '❤️' : '🤍'}</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Content */}
