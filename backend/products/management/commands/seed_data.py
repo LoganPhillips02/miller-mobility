@@ -73,7 +73,7 @@ PRODUCTS = [
         "brand": "Bruno Independent Living Aids",
         "short_description": "Space-saving straight stairlift — folds to just 11.5\" wide, 300 lb capacity.",
         "description": "The Bruno Elan is Bruno's most popular straight stairlift. Features a foldable rail, foldable footrest, and power seat swivel. Handles up to 300 lbs and takes only 13.5 inches on your stairs when folded. Installed by factory-trained technicians in a couple of hours. Lifetime warranty on drive train.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"weight_capacity_lbs": 300, "folded_width_inches": 11.5, "rail_type": "Straight", "power_seat_swivel": "Yes", "warranty": "Lifetime on drive train"},
     },
     {
@@ -93,7 +93,7 @@ PRODUCTS = [
         "brand": "Bruno Independent Living Aids",
         "short_description": "Custom-fit curved stairlift for staircases with landings, 90 or 180 degree turns.",
         "description": "Bruno's curved stairlift uses a durable all-steel rail custom-fabricated to your exact staircase — including 90, 180 degree, and intermediate landings. Standard 400 lb capacity. Installation typically takes 3–4 hours.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"weight_capacity_lbs": 400, "rail_type": "Curved — custom fabricated", "fits": "90-degree, 180-degree, landings", "install_time": "3–4 hours"},
     },
     {
@@ -167,7 +167,7 @@ PRODUCTS = [
         "brand": "Golden Technologies",
         "short_description": "Fold-flat travel scooter with airline-approved lithium battery.",
         "description": "The Buzzaround CarryOn features an airline-approved lithium battery and a fold-flat design for compact storage. One of the lightest full-featured travel scooters on the market.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"battery": "Lithium — airline approved", "folds": "Flat"},
     },
     {
@@ -197,7 +197,7 @@ PRODUCTS = [
         "brand": "Pride Mobility",
         "short_description": "Classic 3-wheel travel scooter — disassembles into 5 lightweight pieces.",
         "description": "Pride's best-selling travel scooter disassembles into five lightweight pieces, with the heaviest under 14 lbs. Tight turning radius for indoor use with solid outdoor performance.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"wheels": 3, "pieces_for_transport": 5, "heaviest_piece": "Under 14 lbs"},
     },
 
@@ -221,7 +221,7 @@ PRODUCTS = [
         "brand": "Pride Mobility",
         "short_description": "Lightweight carbon fiber folding power chair for travel and daily use.",
         "description": "The Jazzy Carbon 27 is a foldable carbon-fiber power wheelchair balancing portability and performance. Folds in seconds and fits in most car trunks.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"frame": "Carbon fiber", "folds": "Yes"},
     },
     {
@@ -241,7 +241,7 @@ PRODUCTS = [
         "brand": "Pride Mobility",
         "short_description": "Carbon fiber frame, airline-compliant 10Ah lithium battery, 300 lb capacity.",
         "description": "The Jazzy Ultra Light is a foldable electric wheelchair with a carbon fiber frame and airline-compliant 10Ah lithium battery — designed for travelers who need a chair that goes anywhere.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"frame": "Carbon fiber", "weight_capacity_lbs": 300, "battery": "10Ah Lithium — airline approved", "folds": "Yes"},
     },
     {
@@ -261,7 +261,7 @@ PRODUCTS = [
         "brand": "Journey Health & Lifestyle",
         "short_description": "Ultra-lightweight at just 26 lbs — carbon fiber foldable electric wheelchair.",
         "description": "The Journey Air Elite weighs only 26 lbs, making it one of the lightest power chairs available. Carbon fiber frame folds in seconds for easy transport in any vehicle.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"weight_lbs": 26, "frame": "Carbon fiber", "folds": "Yes"},
     },
     {
@@ -305,7 +305,7 @@ PRODUCTS = [
         "brand": "Pride Mobility",
         "short_description": "4-position power lift recliner with memory foam chaise pad.",
         "description": "The VivaLift Tranquil 2 features a plush memory foam chaise pad and 4-position recline mechanism that goes to a near-flat sleeping position. Available in multiple fabric options.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"positions": 4, "padding": "Memory foam chaise pad"},
     },
     {
@@ -325,7 +325,7 @@ PRODUCTS = [
         "brand": "Pride Mobility",
         "short_description": "Premium infinite-position lift recliner with heat, massage, and zero-gravity.",
         "description": "The VivaLift Ultra is Pride's flagship lift recliner with infinite positioning, zero-gravity recline, optional heat and massage, and premium upholstery options.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"positions": "Infinite / Zero-Gravity", "heat_massage": "Optional"},
     },
     {
@@ -345,7 +345,7 @@ PRODUCTS = [
         "brand": "Golden Technologies",
         "short_description": "Stylish Golden Rhea lift recliner with MaxiComfort zero-gravity positioning.",
         "description": "The Golden Rhea combines elegant styling with MaxiComfort infinite positioning and zero-gravity recline. Features headrest, lumbar support, and a whisper-quiet motor.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"positions": "Infinite / MaxiComfort", "zero_gravity": "Yes"},
     },
     {
@@ -409,7 +409,7 @@ PRODUCTS = [
         "brand": "Strongback",
         "short_description": "Lightweight folding wheelchair with patented ergonomic lumbar back support.",
         "description": "The Strongback Comfort 24 features a patented back support system that improves posture and reduces pain. Lightweight aluminum frame folds easily for transport.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"back_support": "Patented lumbar / ergonomic", "frame": "Lightweight aluminum"},
     },
     {
@@ -493,7 +493,7 @@ PRODUCTS = [
         "brand": "Rhythm Healthcare",
         "short_description": "10 inch chrome front wheels, padded seat, easy fold-up outdoor rollator.",
         "description": "The Rimor LT features large 10-inch chrome front wheels for smooth rolling on outdoor surfaces, a padded seat for resting, and loop brakes. Folds easily for storage.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"type": "Rollator", "front_wheel_size_inches": 10, "folds": "Yes"},
     },
     {
@@ -547,7 +547,7 @@ PRODUCTS = [
         "brand": "Bruno Independent Living Aids",
         "short_description": "Interior platform vehicle lift for minivans and SUVs — stores device inside.",
         "description": "The Bruno Joey interior platform lift raises your scooter or power wheelchair into the interior of your vehicle through the rear hatch, keeping your device protected from the elements.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"mount_type": "Interior — rear hatch", "compatible_with": "Minivans, SUVs"},
     },
     {
@@ -621,7 +621,7 @@ PRODUCTS = [
         "brand": "BestCare",
         "short_description": "Full-body electric patient lift with ergonomic hand control — 400 lb capacity.",
         "description": "The BestCare PL400 provides powered full-body patient transfers between bed, wheelchair, bath, and more. Ergonomic one-handed hand control. 400 lb weight capacity.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"type": "Full-body electric", "weight_capacity_lbs": 400, "control": "Ergonomic hand control"},
     },
     {
@@ -645,7 +645,7 @@ PRODUCTS = [
         "brand": "EZ-ACCESS",
         "short_description": "Solid-surface portable aluminum ramp with 2-line handrails and self-adjusting transition plates.",
         "description": "The EZ-ACCESS GATEWAY 3G features a solid non-slip aluminum surface, self-adjusting bottom transition plates, and included 2-line handrails. ADA-compliant design. Available in multiple lengths.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"surface": "Solid non-slip textured aluminum", "handrails": "2-line included", "transition_plates": "Self-adjusting"},
     },
     {
@@ -689,7 +689,7 @@ PRODUCTS = [
         "brand": "Golden Technologies",
         "short_description": "Hi-low adjustable residential bed with dual-zone vibrating massage.",
         "description": "The Golden Passport is a residential hi-low adjustable bed that raises and lowers for easy transfers. Dual-zone vibrating massage adds therapeutic comfort. Ideal for home care use.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"adjustment": "Hi-Low electric", "massage": "Dual-zone vibrating"},
     },
     {
@@ -713,7 +713,7 @@ PRODUCTS = [
         "brand": "Bruno Independent Living Aids",
         "short_description": "Residential vertical platform lift for porch, deck, and home entry access.",
         "description": "The Bruno Residential VPL provides safe, smooth access to raised porches, decks, and home entries for wheelchair and scooter users. Features a fold-down ramp, safety sensors, emergency stop button, and battery backup. Straight and 90-degree models available. Free evaluations offered.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"models": "Straight, 90-degree", "battery_backup": "Yes", "safety_sensors": "Yes", "emergency_stop": "Yes", "ramp": "Automatic fold-down"},
     },
 
@@ -747,7 +747,7 @@ PRODUCTS = [
         "brand": "Healthcraft",
         "short_description": "8 ft bariatric floor-to-ceiling transfer pole — 450 lb capacity.",
         "description": "The Healthcraft Bariatric SuperBar is an 8-foot floor-to-ceiling grab bar with 450 lb capacity. Ideal for bedroom, kitchen, bath, and shower safety. Installs via jackscrew between floor and ceiling with no drilling required.",
-        "call_for_price": True, "condition": "new", "status": "available", "is_featured": True,
+        "call_for_price": True, "condition": "new", "status": "available", "is_featured": False,
         "specifications": {"weight_capacity_lbs": 450, "height_ft": 8, "installation": "Jackscrew — tool-free", "locations": "Bedroom, kitchen, bath, shower"},
     },
 

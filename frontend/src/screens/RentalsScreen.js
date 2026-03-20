@@ -64,16 +64,6 @@ const RENTAL_ITEMS = [
     ],
   },
   {
-    icon: '♿',
-    title: 'Wheelchairs',
-    desc: 'Standard manual wheelchairs available for short-term use — perfect for recovering patients, visiting family members, or anyone who needs mobility support for a limited period.',
-    bullets: [
-      'Lightweight & easy to transport',
-      'Available for day, week, or month rentals',
-      'Multiple sizes in stock',
-    ],
-  },
-  {
     icon: '📐',
     title: 'Wheelchair Ramps',
     desc: 'Portable and modular ramps professionally installed at your home or business. Custom-fit to nearly any incline with minimal modifications to the surrounding area. Great for recovering patients or hosting guests with mobility needs.',
@@ -81,16 +71,6 @@ const RENTAL_ITEMS = [
       'Custom fit to nearly any incline or entry',
       'Professional installation by certified technicians',
       'Backed by our standard rental service agreement',
-    ],
-  },
-  {
-    icon: '🦯',
-    title: 'Walkers & Rollators',
-    desc: 'Standard walkers and rolling walkers (rollators) with seats and hand brakes — providing balance, stability, and confidence for everyday movement during recovery or a temporary need.',
-    bullets: [
-      'Standard walkers and 4-wheel rollators available',
-      'Rollators include seat and hand brakes',
-      'Lightweight and easy to maneuver',
     ],
   },
 ];

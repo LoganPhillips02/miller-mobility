@@ -123,11 +123,11 @@ const ContactTab = () => (
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
 const TABS = [
-  { key: 'Inventory', icon: require('../../assets/mobility-scooter.png'), label: 'Products' },
-  { key: 'Deals',     icon: require('../../assets/deals.png'),            label: 'Deals'    },
-  { key: 'Rentals',   icon: require('../../assets/rentals.png'),          label: 'Rentals'  },
-  { key: 'About',     icon: require('../../assets/about-us.png'),         label: 'About Us' },
-  { key: 'Contact',   icon: require('../../assets/white-phone.png'),      label: 'Contact'  },
+  { key: 'Inventory', icon: require('../../assets/navbar/mobility-scooter.png'), label: 'Products' },
+  { key: 'Deals',     icon: require('../../assets/navbar/deals.png'),            label: 'Deals'    },
+  { key: 'Rentals',   icon: require('../../assets/navbar/rentals.png'),          label: 'Rentals'  },
+  { key: 'About',     icon: require('../../assets/navbar/about-us.png'),         label: 'About Us' },
+  { key: 'Contact',   icon: require('../../assets/navbar/white-phone.png'),      label: 'Contact'  },
 ];
 
 // ─── Top Navigation Bar ───────────────────────────────────────────────────────
@@ -162,7 +162,7 @@ const TopNavBar = ({ activeTab, onTabPress, scrollY }) => {
         {/* Left: Logo */}
         <TouchableOpacity onPress={() => onTabPress('Home')} activeOpacity={0.8} style={styles.brandLeft}>
           <Image
-            source={require('../../assets/MM-Logo-DB.webp')}
+            source={require('../../assets/home/MM-Logo.webp')}
             style={styles.brandLogoImg}
             resizeMode="contain"
           />
@@ -172,7 +172,7 @@ const TopNavBar = ({ activeTab, onTabPress, scrollY }) => {
         <View style={styles.brandCenter}>
           <TouchableOpacity onPress={() => Linking.openURL('tel:+12625494900')} activeOpacity={0.7} style={styles.phoneRow}>
             <Image
-              source={require('../../assets/red-phone.png')}
+              source={require('../../assets/navbar/red-phone.png')}
               style={styles.phoneIcon}
               resizeMode="contain"
             />
@@ -415,25 +415,25 @@ const styles = StyleSheet.create({
   tabIconMobile: {
     width: 26,
     height: 26,
-    opacity: 0.6,
+    opacity: 0.7,
     tintColor: Colors.white,
   },
   tabInnerDesktop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: Spacing.md,
   },
   tabIconDesktop: {
-    width: 24,
-    height: 24,
-    opacity: 0.6,
+    width: 30,
+    height: 30,
+    opacity: 0.7,
     tintColor: Colors.white,
   },
   tabIconFocused: {
     opacity: 1,
   },
 
-  tabLabel:        { fontSize: IS_MOBILE ? 12 : 20, marginTop: IS_MOBILE ? 1 : 0, fontWeight: '400', color: 'rgba(255,255,255,0.55)' },
+  tabLabel:        { fontSize: IS_MOBILE ? 12 : 24, marginTop: IS_MOBILE ? 1 : 0, fontWeight: '400', color: 'rgba(255, 255, 255, 0.7)' },
   tabLabelFocused: { fontWeight: '700', color: Colors.white },
 
   // ── Screen slots ──

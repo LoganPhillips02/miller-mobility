@@ -3,12 +3,12 @@ import { View, Text, TouchableOpacity, StyleSheet, Linking, Image } from 'react-
 import { Colors, Typography, Spacing } from '../constants/theme';
 
 const SOCIAL_LINKS = [
-  { label: 'Facebook',   logo: require('../../assets/Facebook-Logo.png'),  url: 'https://www.facebook.com/millermobility/' },
-  { label: 'Instagram',  logo: require('../../assets/Instagram-Logo.webp'), url: 'https://www.instagram.com/millermobilitywi' },
-  { label: 'YouTube',    logo: require('../../assets/Youtube-Logo.png'),   url: 'https://www.youtube.com/@MillerMobility' },
-  { label: 'Google',     logo: require('../../assets/Google-Logo.webp'),   url: 'https://www.google.com/maps/place/Miller+Mobility+Products,+Inc/@43.0615539,-88.4685821,17z' },
-  { label: 'Home\nAdvisor',logo: require('../../assets/HA-Logo.png'),        url: 'https://www.homeadvisor.com/rated.MillerMobilityProducts.62162732.html' },
-  { label: 'BBB',        logo: require('../../assets/BBB-Logo.png'),       url: 'https://www.bbb.org/us/wi/oconomowoc/profile/wheelchair-ramps/miller-mobility-products-inc-0694-17001935#bbbonlineclick' },
+  { label: 'Facebook',   logo: require('../../assets/media/Facebook-Logo.png'),  url: 'https://www.facebook.com/millermobility/' },
+  { label: 'Instagram',  logo: require('../../assets/media/Instagram-Logo.webp'), url: 'https://www.instagram.com/millermobilitywi' },
+  { label: 'YouTube',    logo: require('../../assets/media/Youtube-Logo.png'),   url: 'https://www.youtube.com/@MillerMobility' },
+  { label: 'Google',     logo: require('../../assets/media/Google-Logo.webp'),   url: 'https://www.google.com/maps/place/Miller+Mobility+Products,+Inc/@43.0615539,-88.4685821,17z' },
+  { label: 'Home\nAdvisor',logo: require('../../assets/media/HA-Logo.png'),        url: 'https://www.homeadvisor.com/rated.MillerMobilityProducts.62162732.html' },
+  { label: 'BBB',        logo: require('../../assets/media/BBB-Logo.png'),       url: 'https://www.bbb.org/us/wi/oconomowoc/profile/wheelchair-ramps/miller-mobility-products-inc-0694-17001935#bbbonlineclick' },
 ];
 
 const SiteFooter = ({ onTabPress }) => (
