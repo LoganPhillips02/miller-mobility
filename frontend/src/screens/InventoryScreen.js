@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  ScrollView,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { Colors, Typography, Spacing, Radius } from '../constants/theme';
 import { useProducts, useCategories } from '../hooks/useProducts';
@@ -17,21 +18,36 @@ import SiteFooter from '../components/SiteFooter';
 import { LoadingSpinner, ErrorView, EmptyState, Chip } from '../components/ui';
 import { useTabNavigation } from '../navigation/TabNavigationContext';
 
-const CONDITIONS = [
-  { label: 'All',       value: '' },
-  { label: 'New',       value: 'new' },
-  { label: 'Used',      value: 'used' },
-  { label: 'Certified', value: 'certified' },
-];
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const IS_MOBILE = SCREEN_WIDTH < 768;
+// Approximate height of both filter rows combined — used for desktop collapse
+const FILTER_HEIGHT = 90;
+const FILTER_COLLAPSE_SCROLL = 80;
 
 const InventoryScreen = ({ navigation, route }) => {
-  const { switchTab } = useTabNavigation();
+  const { switchTab, scrollY } = useTabNavigation();
+
+  // On desktop, collapse the filter rows when scrolled down enough
+  const filterHeight = (!IS_MOBILE)
+    ? scrollY.interpolate({
+        inputRange: [0, FILTER_COLLAPSE_SCROLL],
+        outputRange: [FILTER_HEIGHT, 0],
+        extrapolate: 'clamp',
+      })
+    : FILTER_HEIGHT;
+
+  const filterOpacity = (!IS_MOBILE)
+    ? scrollY.interpolate({
+        inputRange: [0, FILTER_COLLAPSE_SCROLL * 0.5],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+      })
+    : 1;
   const initialCategory = route.params?.category ?? '';
-  const [search, setSearch]                   = useState('');
-  const [searchFocused, setSearchFocused]     = useState(false);
+  const [search, setSearch]                     = useState('');
+  const [searchFocused, setSearchFocused]       = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-  const [selectedCondition, setSelectedCondition] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch]   = useState('');
 
   const { recentSearches, saveSearch, removeSearch } = useSearch();
 
@@ -49,7 +65,6 @@ const InventoryScreen = ({ navigation, route }) => {
 
   const filters = {
     ...(selectedCategory  && { category:  selectedCategory }),
-    ...(selectedCondition && { condition: selectedCondition }),
     ...(debouncedSearch   && { search:    debouncedSearch }),
   };
 
@@ -62,13 +77,11 @@ const InventoryScreen = ({ navigation, route }) => {
 
   const clearFilters = () => {
     setSearch(''); setDebouncedSearch('');
-    setSelectedCategory(''); setSelectedCondition('');
+    setSelectedCategory('');
   };
 
   const showSuggestions = searchFocused && search.length === 0 && recentSearches.length > 0;
 
-  // ── Build the content body (list or empty/error state) ──────────────────────
-  // We keep the footer OUTSIDE this so it always appears regardless of state.
   const renderBody = () => {
     if (error) return <ErrorView message={error} onRetry={refresh} />;
     if (loading && products.length === 0) return <LoadingSpinner full />;
@@ -94,7 +107,6 @@ const InventoryScreen = ({ navigation, route }) => {
         onEndReached={loadMore}
         onEndReachedThreshold={0.4}
         ListFooterComponent={hasMore ? <LoadingSpinner size="small" /> : null}
-        // Disable scroll on the FlatList — the outer ScrollView handles it
         scrollEnabled={false}
       />
     );
@@ -102,7 +114,7 @@ const InventoryScreen = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Fixed filters header */}
+      {/* Search bar */}
       <View style={styles.searchBar}>
         <TextInput
           style={styles.searchInput}
@@ -139,60 +151,58 @@ const InventoryScreen = ({ navigation, route }) => {
         </View>
       )}
 
-      <View style={styles.filterRow}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterList}>
-          {allCategories.map((cat) => (
-            <Chip
-              key={cat.slug}
-              label={cat.name}
-              selected={selectedCategory === cat.slug}
-              onPress={() => setSelectedCategory(cat.slug)}
-            />
-          ))}
-        </ScrollView>
-      </View>
+      {/* Category filters — collapse on desktop when scrolled */}
+      <Animated.View style={{ height: filterHeight, opacity: filterOpacity, overflow: 'hidden' }}>
+        {/* Category filter */}
+        <View style={styles.filterRow}>
+          <Animated.ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterList}
+          >
+            {allCategories.map((cat) => (
+              <Chip
+                key={cat.slug}
+                label={cat.name}
+                selected={selectedCategory === cat.slug}
+                onPress={() => setSelectedCategory(cat.slug)}
+              />
+            ))}
+          </Animated.ScrollView>
+        </View>
+      </Animated.View>
 
-      <View style={styles.conditionRow}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterList}>
-          {CONDITIONS.map((c) => (
-            <Chip
-              key={c.value}
-              label={c.label}
-              selected={selectedCondition === c.value}
-              onPress={() => setSelectedCondition(c.value)}
-              style={{ borderRadius: Radius.sm }}
-            />
-          ))}
-        </ScrollView>
-        <Text style={styles.resultCount}>{loading ? '…' : `${products.length} results`}</Text>
-      </View>
-
-      {/* Outer ScrollView ensures footer is always reachable */}
-      <ScrollView>
+      {/* Main scrollable body — drives the brand strip collapse */}
+      <Animated.ScrollView
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+      >
         {renderBody()}
         <SiteFooter onTabPress={switchTab} />
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: Colors.background },
-  searchBar:      { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: Spacing.sm },
-  searchInput:    { flex: 1, fontSize: Typography.sizes.base, color: Colors.black, paddingVertical: Spacing.sm },
-  clearBtn:       { fontSize: 16, color: Colors.gray400, paddingHorizontal: Spacing.sm },
-  suggestions:    { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  suggestionRow:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, gap: Spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
-  suggestionIcon: { fontSize: 14 },
-  suggestionText: { flex: 1, fontSize: Typography.sizes.base, color: Colors.black },
+  safe:             { flex: 1, backgroundColor: Colors.background },
+  searchBar:        { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: Spacing.sm },
+  searchInput:      { flex: 1, fontSize: Typography.sizes.base, color: Colors.black, paddingVertical: Spacing.sm },
+  clearBtn:         { fontSize: 16, color: Colors.gray400, paddingHorizontal: Spacing.sm },
+  suggestions:      { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  suggestionRow:    { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, gap: Spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
+  suggestionIcon:   { fontSize: 14 },
+  suggestionText:   { flex: 1, fontSize: Typography.sizes.base, color: Colors.black },
   suggestionRemove: { fontSize: 12, color: Colors.gray400 },
-  filterRow:      { backgroundColor: Colors.surface, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  conditionRow:   { backgroundColor: Colors.surface, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border, flexDirection: 'row', alignItems: 'center' },
-  filterList:     { paddingHorizontal: Spacing.base, flexGrow: 0 },
-  resultCount:    { fontSize: Typography.sizes.sm, color: Colors.gray400, paddingRight: Spacing.base, minWidth: 70, textAlign: 'right' },
-  grid:           { padding: Spacing.base },
-  row:            { justifyContent: 'space-between', marginBottom: Spacing.md },
-  card:           { width: '48.5%' },
+  filterRow:        { backgroundColor: Colors.surface, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  filterList:       { paddingHorizontal: Spacing.base, flexGrow: 0 },
+  resultCount:      { fontSize: Typography.sizes.sm, color: Colors.gray400, paddingRight: Spacing.base, minWidth: 70, textAlign: 'right' },
+  grid:             { padding: Spacing.base },
+  row:              { justifyContent: 'space-between', marginBottom: Spacing.md },
+  card:             { width: '48.5%' },
 });
 
 export default InventoryScreen;

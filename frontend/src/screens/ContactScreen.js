@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
   SafeAreaView,
   Linking,
   Alert,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
+  TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
 import { dealsService } from '../services/api';
@@ -44,10 +44,9 @@ const Input = ({ style, ...props }) => (
 );
 
 const ContactScreen = () => {
-  // ── Fix: import switchTab from context instead of relying on navigation prop ──
-  const { switchTab } = useTabNavigation();
+  const { switchTab, scrollY } = useTabNavigation();
 
-  const [activeTab, setActiveTab] = useState('contact'); // 'contact' | 'tradein'
+  const [activeTab, setActiveTab] = useState('contact');
   const [form, setForm]           = useState(createTradeInRequest());
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted]   = useState(false);
@@ -88,7 +87,14 @@ const ContactScreen = () => {
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <Animated.ScrollView
+          showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+        >
           <View style={styles.scroll}>
 
             {activeTab === 'contact' ? (
@@ -221,50 +227,48 @@ const ContactScreen = () => {
             )}
           </View>
 
-          {/* Footer */}
           <SiteFooter onTabPress={switchTab} />
-          
-        </ScrollView>
+        </Animated.ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  tabs: { flexDirection: 'row', backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  tab: { flex: 1, paddingVertical: Spacing.md, alignItems: 'center', borderBottomWidth: 3, borderBottomColor: 'transparent' },
-  tabActive: { borderBottomColor: Colors.primary },
-  tabText: { fontSize: Typography.sizes.base, color: Colors.gray600, fontWeight: Typography.weights.medium },
-  tabTextActive: { color: Colors.primary, fontWeight: Typography.weights.bold },
-  scroll: { padding: Spacing.base },
-  heroSection: { backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg, marginBottom: Spacing.lg },
-  heroTitle: { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.white },
-  heroSub: { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.75)', marginTop: Spacing.xs },
-  contactCard: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.base, marginBottom: Spacing.sm, flexDirection: 'row', alignItems: 'center', gap: Spacing.md, ...Shadows.sm },
-  contactIcon: { fontSize: 28 },
-  contactInfo: { flex: 1 },
-  contactLabel: { fontSize: Typography.sizes.sm, color: Colors.gray600 },
-  contactValue: { fontSize: Typography.sizes.base, fontWeight: Typography.weights.semibold, color: Colors.black },
-  contactValueLink: { color: Colors.primary },
-  contactArrow: { fontSize: 22, color: Colors.gray400 },
-  tradeInPromo: { backgroundColor: Colors.gray50, borderRadius: Radius.xl, padding: Spacing.lg, marginTop: Spacing.base, borderWidth: 1, borderColor: Colors.border },
-  tradeInPromoTitle: { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.black },
-  tradeInPromoText: { fontSize: Typography.sizes.sm, color: Colors.gray600, marginTop: Spacing.xs },
-  tradeInPromoButton: { marginTop: Spacing.md },
+  safe:                 { flex: 1, backgroundColor: Colors.background },
+  tabs:                 { flexDirection: 'row', backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  tab:                  { flex: 1, paddingVertical: Spacing.md, alignItems: 'center', borderBottomWidth: 3, borderBottomColor: 'transparent' },
+  tabActive:            { borderBottomColor: Colors.primary },
+  tabText:              { fontSize: Typography.sizes.base, color: Colors.gray600, fontWeight: Typography.weights.medium },
+  tabTextActive:        { color: Colors.primary, fontWeight: Typography.weights.bold },
+  scroll:               { padding: Spacing.base },
+  heroSection:          { backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg, marginBottom: Spacing.lg },
+  heroTitle:            { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.white },
+  heroSub:              { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.75)', marginTop: Spacing.xs },
+  contactCard:          { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.base, marginBottom: Spacing.sm, flexDirection: 'row', alignItems: 'center', gap: Spacing.md, ...Shadows.sm },
+  contactIcon:          { fontSize: 28 },
+  contactInfo:          { flex: 1 },
+  contactLabel:         { fontSize: Typography.sizes.sm, color: Colors.gray600 },
+  contactValue:         { fontSize: Typography.sizes.base, fontWeight: Typography.weights.semibold, color: Colors.black },
+  contactValueLink:     { color: Colors.primary },
+  contactArrow:         { fontSize: 22, color: Colors.gray400 },
+  tradeInPromo:         { backgroundColor: Colors.gray50, borderRadius: Radius.xl, padding: Spacing.lg, marginTop: Spacing.base, borderWidth: 1, borderColor: Colors.border },
+  tradeInPromoTitle:    { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.black },
+  tradeInPromoText:     { fontSize: Typography.sizes.sm, color: Colors.gray600, marginTop: Spacing.xs },
+  tradeInPromoButton:   { marginTop: Spacing.md },
   tradeInPromoButtonText: { color: Colors.primary, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.base },
-  sectionTitle: { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.black, marginBottom: Spacing.md, marginTop: Spacing.base },
-  field: { marginBottom: Spacing.md },
-  fieldLabel: { fontSize: Typography.sizes.sm, fontWeight: Typography.weights.semibold, color: Colors.gray800, marginBottom: Spacing.xs },
-  input: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.md - 2, fontSize: Typography.sizes.base, color: Colors.black },
-  inputSmall: { width: 80 },
-  textarea: { height: 90, textAlignVertical: 'top' },
-  row2: { flexDirection: 'row', gap: Spacing.md },
-  row3: { flexDirection: 'row', gap: Spacing.sm, alignItems: 'flex-end' },
-  successContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing['5xl'], gap: Spacing.md },
-  successIcon: { fontSize: 64 },
-  successTitle: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.black },
-  successText: { fontSize: Typography.sizes.base, color: Colors.gray600, textAlign: 'center', lineHeight: Typography.sizes.base * 1.6 },
+  sectionTitle:         { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.black, marginBottom: Spacing.md, marginTop: Spacing.base },
+  field:                { marginBottom: Spacing.md },
+  fieldLabel:           { fontSize: Typography.sizes.sm, fontWeight: Typography.weights.semibold, color: Colors.gray800, marginBottom: Spacing.xs },
+  input:                { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.md - 2, fontSize: Typography.sizes.base, color: Colors.black },
+  inputSmall:           { width: 80 },
+  textarea:             { height: 90, textAlignVertical: 'top' },
+  row2:                 { flexDirection: 'row', gap: Spacing.md },
+  row3:                 { flexDirection: 'row', gap: Spacing.sm, alignItems: 'flex-end' },
+  successContainer:     { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing['5xl'], gap: Spacing.md },
+  successIcon:          { fontSize: 64 },
+  successTitle:         { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.black },
+  successText:          { fontSize: Typography.sizes.base, color: Colors.gray600, textAlign: 'center', lineHeight: Typography.sizes.base * 1.6 },
 });
 
 export default ContactScreen;

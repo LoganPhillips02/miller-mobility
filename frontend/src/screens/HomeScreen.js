@@ -2,7 +2,7 @@ import React from 'react';
 import {
   View,
   Text,
-  ScrollView,
+  Animated,
   FlatList,
   TouchableOpacity,
   StyleSheet,
@@ -19,16 +19,29 @@ import { SectionHeader, LoadingSpinner } from '../components/ui';
 import { useTabNavigation } from '../navigation/TabNavigationContext';
 
 const CATEGORY_ICONS = {
+  'stairlifts': '🪜',
+  'mobility-scooters': '🛵',
+  'power-wheelchairs': '⚡',
+  'lift-chairs-power-recliners': '🪑',
+  'wheelchairs-transport-chairs': '♿',
+  'walkers-rollators': '🦯',
+  'vehicle-lifts': '🚗',
+  'patient-lifts': '🏥',
+  'ramps': '📐',
+  'beds': '🛏️',
+  'vertical-platform-lifts-home-elevators': '🏠',
+  'security-poles': '🔒',
+  'tables-trays': '🍽️',
+  // legacy slugs kept for backward compat
   'wheelchair-accessible-vehicles': '🚐',
-  'power-wheelchairs': '♿',
+  'power-wheelchairs': '⚡',
   'scooters': '🛵',
   'lifts': '🔧',
-  'ramps': '📐',
   'accessories': '🎒',
 };
 
 const HomeScreen = () => {
-  const { switchTab } = useTabNavigation();
+  const { switchTab, scrollY } = useTabNavigation();
   const { products: featured, loading: featuredLoading } = useFeaturedProducts();
   const { categories, loading: categoriesLoading } = useCategories();
   const { deals, loading: dealsLoading } = useDeals();
@@ -37,15 +50,25 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+      <Animated.ScrollView
+        style={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+      >
 
         {/* Hero */}
         <View style={styles.hero}>
           <Text style={styles.heroTag}>Miller Mobility</Text>
           <Text style={styles.heroTitle}>Find Your Perfect{'\n'}Mobility Solution</Text>
-          <Text style={styles.heroSub}>New & pre-owned WAVs, power chairs, scooters, and more.</Text>
+          <Text style={styles.heroSub}>
+            Stairlifts, scooters, lift chairs, power wheelchairs, ramps & more — family owned since 2004.
+          </Text>
           <TouchableOpacity style={styles.heroButton} onPress={() => switchTab('Inventory')}>
-            <Text style={styles.heroButtonText}>Browse Inventory →</Text>
+            <Text style={styles.heroButtonText}>Browse Products →</Text>
           </TouchableOpacity>
         </View>
 
@@ -98,7 +121,7 @@ const HomeScreen = () => {
 
         {/* Featured Inventory */}
         <View style={styles.section}>
-          <SectionHeader title="Featured Inventory" onSeeAll={() => switchTab('Inventory', { featured: true })} />
+          <SectionHeader title="Featured Products" onSeeAll={() => switchTab('Inventory', { featured: true })} />
           {featuredLoading ? <LoadingSpinner size="small" /> : (
             <FlatList
               data={featured.slice(0, 6)}
@@ -122,10 +145,11 @@ const HomeScreen = () => {
           <View style={styles.whyCard}>
             <Text style={styles.whyTitle}>Why Miller Mobility?</Text>
             {[
-              { icon: '🏆', text: 'Decades of mobility expertise' },
-              { icon: '🔧', text: 'Full-service installation & repairs' },
-              { icon: '💳', text: 'Flexible financing options' },
-              { icon: '🤝', text: 'Personalized guidance & demos' },
+              { icon: '🏆', text: 'Family owned & operated since 2004' },
+              { icon: '🔧', text: 'Factory-trained installation & service experts' },
+              { icon: '💳', text: 'Flexible financing — ask about 0% APR options' },
+              { icon: '🤝', text: 'Preferred provider for ADRC, IRIS & CLTS programs' },
+              { icon: '🐕', text: 'A warm, welcoming showroom in Oconomowoc, WI' },
             ].map(({ icon, text }) => (
               <View key={text} style={styles.whyRow}>
                 <Text style={styles.whyIcon}>{icon}</Text>
@@ -138,10 +162,23 @@ const HomeScreen = () => {
           </View>
         </View>
 
+        {/* Rentals promo strip */}
+        <View style={styles.section}>
+          <View style={styles.rentalsStrip}>
+            <Text style={styles.rentalsTitle}>🔑 Need Equipment Temporarily?</Text>
+            <Text style={styles.rentalsText}>
+              Miller Mobility rents wheelchairs, scooters, stairlifts, lift chairs, patient lifts, and ramps by the day, week, or month. Pickup in store or we'll deliver.
+            </Text>
+            <TouchableOpacity style={styles.rentalsButton} onPress={() => switchTab('Rentals')}>
+              <Text style={styles.rentalsButtonText}>View Rentals →</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Footer */}
         <SiteFooter onTabPress={switchTab} />
 
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 };
@@ -152,7 +189,7 @@ const styles = StyleSheet.create({
   hero: { backgroundColor: Colors.primary, padding: Spacing.xl, paddingTop: Spacing['2xl'] },
   heroTag: { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.bold, color: 'rgba(255,255,255,0.6)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: Spacing.sm },
   heroTitle: { fontSize: Typography.sizes['3xl'], fontWeight: Typography.weights.heavy, color: Colors.white, lineHeight: Typography.sizes['3xl'] * 1.2, marginBottom: Spacing.sm },
-  heroSub: { fontSize: Typography.sizes.base, color: 'rgba(255,255,255,0.75)', marginBottom: Spacing.lg },
+  heroSub: { fontSize: Typography.sizes.base, color: 'rgba(255,255,255,0.75)', marginBottom: Spacing.lg, lineHeight: Typography.sizes.base * 1.5 },
   heroButton: { backgroundColor: Colors.white, paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl, borderRadius: Radius.full, alignSelf: 'flex-start' },
   heroButtonText: { color: Colors.primary, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.base },
   section: { marginTop: Spacing.xl, paddingHorizontal: Spacing.base },
@@ -170,6 +207,11 @@ const styles = StyleSheet.create({
   whyText: { fontSize: Typography.sizes.base, color: 'rgba(255,255,255,0.85)', flex: 1 },
   contactButton: { marginTop: Spacing.md, backgroundColor: 'rgba(255,255,255,0.15)', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.full, alignSelf: 'flex-start' },
   contactButtonText: { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm },
+  rentalsStrip: { backgroundColor: Colors.gray50, borderRadius: Radius.xl, padding: Spacing.lg, borderWidth: 1.5, borderColor: Colors.border, marginBottom: Spacing.lg },
+  rentalsTitle: { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.black, marginBottom: Spacing.sm },
+  rentalsText: { fontSize: Typography.sizes.sm, color: Colors.gray600, lineHeight: Typography.sizes.sm * 1.6, marginBottom: Spacing.md },
+  rentalsButton: { backgroundColor: Colors.primary, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.full, alignSelf: 'flex-start' },
+  rentalsButtonText: { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm },
 });
 
 export default HomeScreen;

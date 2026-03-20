@@ -3,9 +3,9 @@ import {
   View,
   Text,
   FlatList,
-  ScrollView,
   StyleSheet,
   SafeAreaView,
+  Animated,
 } from 'react-native';
 import { Colors, Typography, Spacing } from '../constants/theme';
 import { useDeals } from '../hooks/useDeals';
@@ -15,7 +15,7 @@ import { LoadingSpinner, ErrorView, EmptyState } from '../components/ui';
 import { useTabNavigation } from '../navigation/TabNavigationContext';
 
 const DealsScreen = ({ navigation }) => {
-  const { switchTab } = useTabNavigation();
+  const { switchTab, scrollY } = useTabNavigation();
   const { deals, loading, error, refresh } = useDeals();
 
   if (error) return <ErrorView message={error} onRetry={refresh} />;
@@ -55,21 +55,26 @@ const DealsScreen = ({ navigation }) => {
         <Text style={styles.headerSub}>Special offers, financing & promotions</Text>
       </View>
 
-      {/* Outer ScrollView ensures footer is always reachable */}
-      <ScrollView>
+      <Animated.ScrollView
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+      >
         {renderBody()}
         <SiteFooter onTabPress={switchTab} />
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safe:       { flex: 1, backgroundColor: Colors.background },
-  header:     { backgroundColor: Colors.primary, paddingHorizontal: Spacing.base, paddingVertical: Spacing.lg },
-  headerTitle:{ fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.white },
-  headerSub:  { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.7)', marginTop: Spacing.xs },
-  list:       { padding: Spacing.base },
+  safe:        { flex: 1, backgroundColor: Colors.background },
+  header:      { backgroundColor: Colors.primary, paddingHorizontal: Spacing.base, paddingVertical: Spacing.lg },
+  headerTitle: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.white },
+  headerSub:   { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.7)', marginTop: Spacing.xs },
+  list:        { padding: Spacing.base },
 });
 
 export default DealsScreen;

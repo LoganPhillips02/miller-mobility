@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, SafeAreaView,
-  TouchableOpacity, Linking,
+  View, Text, StyleSheet, SafeAreaView,
+  TouchableOpacity, Linking, Animated,
 } from 'react-native';
 import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
 import SiteFooter from '../components/SiteFooter';
@@ -17,11 +17,17 @@ const VALUES = [
 const COUNTIES = 'Waukesha, Milwaukee, Walworth, Kenosha, Racine, Dane, Sheboygan, Rock, Green, Columbia, Dodge, Fond du Lac, Jefferson, Ozaukee';
 
 const AboutScreen = () => {
-  const { switchTab } = useTabNavigation();
+  const { switchTab, scrollY } = useTabNavigation();
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView>
+      <Animated.ScrollView
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+      >
         {/* Hero */}
         <View style={styles.hero}>
           <Text style={styles.heroTag}>FAMILY OWNED SINCE 2004</Text>
@@ -89,7 +95,7 @@ const AboutScreen = () => {
         </View>
 
         <SiteFooter onTabPress={switchTab} />
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 };

@@ -2,12 +2,12 @@ import React from 'react';
 import {
   View,
   Text,
-  ScrollView,
   Image,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
   Linking,
+  Animated,
 } from 'react-native';
 import { Colors, Typography, Spacing, Radius } from '../constants/theme';
 import { useDeal } from '../hooks/useDeals';
@@ -24,7 +24,7 @@ const InfoRow = ({ label, value }) => (
 );
 
 const DealDetailScreen = ({ route, navigation }) => {
-  const { switchTab } = useTabNavigation();
+  const { switchTab, scrollY } = useTabNavigation();
   const { slug } = route.params;
   const { deal, loading, error } = useDeal(slug);
 
@@ -37,8 +37,14 @@ const DealDetailScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+      >
         {/* Hero */}
         <View style={[styles.hero, !deal.imageUrl && { backgroundColor: Colors.primary }]}>
           {deal.imageUrl ? (
@@ -70,11 +76,10 @@ const DealDetailScreen = ({ route, navigation }) => {
           <Text style={styles.description}>{deal.description}</Text>
           <Divider />
 
-          {/* Deal specifics */}
-          {deal.discountAmount && <InfoRow label="Savings"        value={`$${deal.discountAmount.toLocaleString()}`} />}
-          {deal.financingApr != null && <InfoRow label="APR"      value={`${deal.financingApr}%`} />}
-          {deal.financingMonths    && <InfoRow label="Term"        value={`${deal.financingMonths} months`} />}
-          {deal.promoCode          && (
+          {deal.discountAmount     && <InfoRow label="Savings" value={`$${deal.discountAmount.toLocaleString()}`} />}
+          {deal.financingApr != null && <InfoRow label="APR"   value={`${deal.financingApr}%`} />}
+          {deal.financingMonths    && <InfoRow label="Term"    value={`${deal.financingMonths} months`} />}
+          {deal.promoCode && (
             <View style={styles.promoCard}>
               <Text style={styles.promoCardLabel}>Promo Code</Text>
               <Text style={styles.promoCardCode}>{deal.promoCode}</Text>
@@ -87,13 +92,14 @@ const DealDetailScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Footer — inside ScrollView so it scrolls with content */}
         <SiteFooter onTabPress={switchTab} />
-
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Sticky CTA bar */}
       <View style={styles.ctaBar}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.backButtonText}>‹ Back</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.secondaryButton} onPress={() => switchTab('Contact')}>
           <Text style={styles.secondaryButtonText}>✉️ Inquire</Text>
         </TouchableOpacity>
@@ -104,32 +110,34 @@ const DealDetailScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  hero: { height: 220, position: 'relative' },
-  heroImage: { width: '100%', height: '100%' },
-  heroPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  heroIcon: { fontSize: 64 },
-  badge: { position: 'absolute', bottom: Spacing.md, left: Spacing.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs, borderRadius: Radius.full },
-  badgeText: { color: Colors.white, fontSize: Typography.sizes.sm, fontWeight: Typography.weights.bold },
-  body: { padding: Spacing.base },
-  dealType: { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.bold, color: Colors.primary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.xs },
-  title: { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.black, marginBottom: Spacing.sm },
-  expiryBanner: { backgroundColor: '#FFF3CD', borderRadius: Radius.md, padding: Spacing.sm, marginBottom: Spacing.md },
-  expiryText: { fontSize: Typography.sizes.sm, color: '#856404', fontWeight: Typography.weights.semibold },
-  description: { fontSize: Typography.sizes.base, color: Colors.gray600, lineHeight: Typography.sizes.base * 1.7, marginBottom: Spacing.base },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
-  infoLabel: { fontSize: Typography.sizes.base, color: Colors.gray600 },
-  infoValue: { fontSize: Typography.sizes.base, fontWeight: Typography.weights.bold, color: Colors.black },
-  promoCard: { backgroundColor: Colors.primary, borderRadius: Radius.lg, padding: Spacing.lg, alignItems: 'center', marginVertical: Spacing.base },
-  promoCardLabel: { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.bold, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.sm },
-  promoCardCode: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.white, letterSpacing: 3, marginBottom: Spacing.xs },
-  promoCardNote: { fontSize: Typography.sizes.xs, color: 'rgba(255,255,255,0.7)' },
-  viewProductsButton: { padding: Spacing.base, alignItems: 'center' },
-  viewProductsText: { fontSize: Typography.sizes.base, fontWeight: Typography.weights.semibold, color: Colors.primary },
-  ctaBar: { flexDirection: 'row', padding: Spacing.base, paddingBottom: Spacing.lg, backgroundColor: Colors.surface, borderTopWidth: 1, borderTopColor: Colors.border, gap: Spacing.md },
-  secondaryButton: { paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.primary },
+  safe:                { flex: 1, backgroundColor: Colors.background },
+  hero:                { height: 220, position: 'relative' },
+  heroImage:           { width: '100%', height: '100%' },
+  heroPlaceholder:     { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  heroIcon:            { fontSize: 64 },
+  badge:               { position: 'absolute', bottom: Spacing.md, left: Spacing.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs, borderRadius: Radius.full },
+  badgeText:           { color: Colors.white, fontSize: Typography.sizes.sm, fontWeight: Typography.weights.bold },
+  body:                { padding: Spacing.base },
+  dealType:            { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.bold, color: Colors.primary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.xs },
+  title:               { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.black, marginBottom: Spacing.sm },
+  expiryBanner:        { backgroundColor: '#FFF3CD', borderRadius: Radius.md, padding: Spacing.sm, marginBottom: Spacing.md },
+  expiryText:          { fontSize: Typography.sizes.sm, color: '#856404', fontWeight: Typography.weights.semibold },
+  description:         { fontSize: Typography.sizes.base, color: Colors.gray600, lineHeight: Typography.sizes.base * 1.7, marginBottom: Spacing.base },
+  infoRow:             { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
+  infoLabel:           { fontSize: Typography.sizes.base, color: Colors.gray600 },
+  infoValue:           { fontSize: Typography.sizes.base, fontWeight: Typography.weights.bold, color: Colors.black },
+  promoCard:           { backgroundColor: Colors.primary, borderRadius: Radius.lg, padding: Spacing.lg, alignItems: 'center', marginVertical: Spacing.base },
+  promoCardLabel:      { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.bold, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.sm },
+  promoCardCode:       { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.white, letterSpacing: 3, marginBottom: Spacing.xs },
+  promoCardNote:       { fontSize: Typography.sizes.xs, color: 'rgba(255,255,255,0.7)' },
+  viewProductsButton:  { padding: Spacing.base, alignItems: 'center' },
+  viewProductsText:    { fontSize: Typography.sizes.base, fontWeight: Typography.weights.semibold, color: Colors.primary },
+  ctaBar:              { flexDirection: 'row', padding: Spacing.base, paddingBottom: Spacing.lg, backgroundColor: Colors.surface, borderTopWidth: 1, borderTopColor: Colors.border, gap: Spacing.md },
+  backButton:          { paddingVertical: Spacing.md, paddingHorizontal: Spacing.md, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.gray200 },
+  backButtonText:      { fontSize: Typography.sizes.base, fontWeight: Typography.weights.bold, color: Colors.gray600 },
+  secondaryButton:     { paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.primary },
   secondaryButtonText: { fontSize: Typography.sizes.base, fontWeight: Typography.weights.bold, color: Colors.primary },
-  claimButton: { flex: 1 },
+  claimButton:         { flex: 1 },
 });
 
 export default DealDetailScreen;
