@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Text,
   View,
@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   StatusBar,
   Linking,
+  Dimensions,
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -18,13 +19,15 @@ import ProductDetailScreen from '../screens/ProductDetailScreen';
 import DealsScreen         from '../screens/DealsScreen';
 import DealDetailScreen    from '../screens/DealDetailScreen';
 import ContactScreen       from '../screens/ContactScreen';
-import RentalsScreen  from '../screens/RentalsScreen';
-import AboutScreen    from '../screens/AboutScreen';
+import RentalsScreen       from '../screens/RentalsScreen';
+import AboutScreen         from '../screens/AboutScreen';
 
 import { Colors, Typography, Spacing } from '../constants/theme';
-import { TabNavigationContext }  from './TabNavigationContext';
-import { Dimensions } from 'react-native';
+import { TabNavigationContext } from './TabNavigationContext';
+
+// ─── Screen dimensions ────────────────────────────────────────────────────────
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const IS_MOBILE = SCREEN_WIDTH < 768;
 
 // ─── Stack instances ──────────────────────────────────────────────────────────
 const HomeStack      = createStackNavigator();
@@ -45,9 +48,6 @@ const stackHeaderOptions = {
 };
 
 // ─── Per-tab navigators ───────────────────────────────────────────────────────
-// Each wraps its own independent NavigationContainer so React Navigation
-// doesn't throw "multiple navigators under a single container".
-
 const HomeTab = () => (
   <NavigationContainer independent={true}>
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
@@ -56,28 +56,23 @@ const HomeTab = () => (
   </NavigationContainer>
 );
 
-const InventoryTab = ({ pendingParams }) => {
-  // pendingParams lets HomeScreen pass { category, categoryName } when it
-  // switches to this tab. The ref is consumed once by InventoryScreen via
-  // route.params (set as initialParams on the screen).
-  return (
-    <NavigationContainer independent={true}>
-      <InventoryStack.Navigator screenOptions={stackHeaderOptions}>
-        <InventoryStack.Screen
-          name="InventoryList"
-          component={InventoryScreen}
-          options={{ title: 'Inventory' }}
-          initialParams={pendingParams ?? {}}
-        />
-        <InventoryStack.Screen
-          name="ProductDetail"
-          component={ProductDetailScreen}
-          options={({ route }) => ({ title: route.params?.name ?? 'Product Details' })}
-        />
-      </InventoryStack.Navigator>
-    </NavigationContainer>
-  );
-};
+const InventoryTab = ({ pendingParams }) => (
+  <NavigationContainer independent={true}>
+    <InventoryStack.Navigator screenOptions={stackHeaderOptions}>
+      <InventoryStack.Screen
+        name="InventoryList"
+        component={InventoryScreen}
+        options={{ title: 'Inventory' }}
+        initialParams={pendingParams ?? {}}
+      />
+      <InventoryStack.Screen
+        name="ProductDetail"
+        component={ProductDetailScreen}
+        options={({ route }) => ({ title: route.params?.name ?? 'Product Details' })}
+      />
+    </InventoryStack.Navigator>
+  </NavigationContainer>
+);
 
 const DealsTab = () => (
   <NavigationContainer independent={true}>
@@ -122,32 +117,57 @@ const ContactTab = () => (
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
 const TABS = [
-  { key: 'Inventory', emoji: '🚐', label: 'Products'  },
-  { key: 'Deals',     emoji: '🏷️', label: 'Deals'     },
-  { key: 'Rentals',   emoji: '🔑', label: 'Rentals'   },
+  { key: 'Inventory', emoji: '🚐', label: 'Products' },
+  { key: 'Deals',     emoji: '🏷️', label: 'Deals'    },
+  { key: 'Rentals',   emoji: '🔑', label: 'Rentals'  },
   { key: 'About',     emoji: 'ℹ️',  label: 'About Us' },
-  { key: 'Contact',   emoji: '📞', label: 'Contact'   },
+  { key: 'Contact',   emoji: '📞', label: 'Contact'  },
 ];
 
 // ─── Top Navigation Bar ───────────────────────────────────────────────────────
 const TopNavBar = ({ activeTab, onTabPress }) => (
   <View style={styles.navBar}>
+
+    {/* ── Header strip: logo / phone / info ── */}
     <View style={styles.brandStrip}>
-      <TouchableOpacity onPress={() => onTabPress('Home')} activeOpacity={0.7}>
+
+      {/* Left: Logo */}
+      <TouchableOpacity onPress={() => onTabPress('Home')} activeOpacity={0.8} style={styles.brandLeft}>
         <Image
           source={require('../../assets/MM-Logo-DB.webp')}
           style={styles.brandLogoImg}
           resizeMode="contain"
         />
       </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.phoneBar}
-        onPress={() => Linking.openURL('tel:+12625494900')}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.phoneBarText}>📞 262-549-4900</Text>
-      </TouchableOpacity>
+
+      {/* Center: Phone */}
+      <View style={styles.brandCenter}>
+        <TouchableOpacity onPress={() => Linking.openURL('tel:+12625494900')} activeOpacity={0.7}>
+          <Text style={styles.phoneBarText}>📞 262-549-4900</Text>
+        </TouchableOpacity>
+        {!IS_MOBILE && (
+          <Text style={styles.phoneSubText}>Call today to speak to a product expert!</Text>
+        )}
+      </View>
+
+      {/* Right: Hours + Address — desktop only */}
+      {!IS_MOBILE && (
+        <View style={styles.brandRight}>
+          <Text style={styles.hoursText}>SHOWROOM HOURS: M–F: 9–5 · SAT: 10–2</Text>
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://maps.google.com/?q=36336+N+Summit+Village+Way+Oconomowoc+WI+53066')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.addressText}>36336 N. Summit Village Way Oconomowoc, WI 53066</Text>
+          </TouchableOpacity>
+          <Text style={styles.taglineText}>
+            Stair Lifts, Scooters, Lift Chairs & More{'\n'}Family Owned Since 2004!
+          </Text>
+        </View>
+      )}
     </View>
+
+    {/* ── Tab row ── */}
     <View style={styles.tabRow}>
       {TABS.map((tab) => {
         const focused = activeTab === tab.key;
@@ -158,11 +178,9 @@ const TopNavBar = ({ activeTab, onTabPress }) => (
             onPress={() => onTabPress(tab.key)}
             activeOpacity={0.75}
           >
-            <View style={styles.tabIconWrap}>
-              <Text style={[styles.tabEmoji, focused && styles.tabEmojiFocused]}>
-                {tab.emoji}
-              </Text>
-            </View>
+            <Text style={[styles.tabEmoji, focused && styles.tabEmojiFocused]}>
+              {tab.emoji}
+            </Text>
             <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
               {tab.label}
             </Text>
@@ -170,6 +188,7 @@ const TopNavBar = ({ activeTab, onTabPress }) => (
         );
       })}
     </View>
+
   </View>
 );
 
@@ -199,13 +218,8 @@ const AppNavigator = () => {
       <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
 
-        {/* TOP NAV BAR — first in the tree → renders at the top */}
-        <TopNavBar
-          activeTab={activeTab}
-          onTabPress={handleTabPress}
-        />
+        <TopNavBar activeTab={activeTab} onTabPress={handleTabPress} />
 
-        {/* SCREEN AREA — fills all space below the nav bar */}
         <View style={styles.screenContainer}>
           {Object.keys(tabComponents).map((key) => (
             <View
@@ -213,7 +227,7 @@ const AppNavigator = () => {
               style={[
                 styles.screenSlot,
                 activeTab === key ? styles.screenVisible : styles.screenHidden,
-                { pointerEvents: activeTab === key ? 'auto' : 'none' },  // ← move here
+                { pointerEvents: activeTab === key ? 'auto' : 'none' },
               ]}
             >
               {tabComponents[key]}
@@ -232,6 +246,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
 
+  // ── Outer nav wrapper ──
   navBar: {
     backgroundColor: Colors.primary,
     shadowColor: '#000',
@@ -242,39 +257,79 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
 
+  // ── Header strip ──
   brandStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.xs,
-    paddingBottom: 0,
     backgroundColor: Colors.white,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    gap: Spacing.xs,
   },
-
-  brandLogo: { fontSize: 22 },
+  brandLeft: {
+    flex: 2,
+    justifyContent: 'center',
+  },
+  brandCenter: {
+    flex: IS_MOBILE ? 2 : 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandRight: {
+    flex: 3,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    gap: 2,
+  },
   brandLogoImg: {
-    width: SCREEN_WIDTH * 0.65,
-    height: SCREEN_WIDTH * 0.08,
-  },
-  
-  brandName: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.heavy,
-    color: Colors.white,
-    letterSpacing: 0.4,
+    width:  IS_MOBILE ? SCREEN_WIDTH * 0.5 : SCREEN_WIDTH * 0.28,
+    height: IS_MOBILE ? SCREEN_WIDTH * 0.15 : SCREEN_WIDTH * 0.09,
   },
 
+  phoneBarText: {
+    fontSize: IS_MOBILE ? Typography.sizes.md : Typography.sizes['2xl'],
+    fontWeight: Typography.weights.heavy,
+    color: Colors.error,
+    textAlign: 'center',
+  },
+  phoneSubText: {
+    fontSize: IS_MOBILE ? 8 : Typography.sizes.lg,
+    fontWeight: Typography.weights.medium,
+    color: Colors.primary,
+    textAlign: 'center',
+    marginTop: 1,
+  },
+  hoursText: {
+    fontSize: IS_MOBILE ? 8 : Typography.sizes.lg,
+    fontWeight: Typography.weights.bold,
+    color: Colors.error,
+    textAlign: 'right',
+  },
+  addressText: {
+    fontSize: IS_MOBILE ? 8 : Typography.sizes.lg,
+    color: Colors.gray600,
+    textAlign: 'right',
+    lineHeight: IS_MOBILE ? 11 : 18,
+    marginTop: 5,
+  },
+  taglineText: {
+    fontSize: IS_MOBILE ? 8 : Typography.sizes.lg,
+    color: Colors.gray600,
+    textAlign: 'right',
+    lineHeight: IS_MOBILE ? 11 : 18,
+    marginTop: 7,
+    fontStyle: 'italic',
+  },
+
+  // ── Tab row ──
   tabRow: {
     flexDirection: 'row',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: Colors.primary,
   },
-
   tabItem: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: Spacing.xs,
+    paddingVertical: IS_MOBILE ? Spacing.md : Spacing.lg,
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },
@@ -282,31 +337,12 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.white,
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
-
-  tabIconWrap: { position: 'relative' },
-  tabEmoji: { fontSize: 16, opacity: 0.6 },
-  tabEmojiFocused: { fontSize: 17, opacity: 1 },
-
-  badge: {
-    position: 'absolute',
-    top: -4, right: -8,
-    backgroundColor: Colors.accent,
-    borderRadius: 8,
-    minWidth: 16, height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  badgeText: { color: Colors.white, fontSize: 9, fontWeight: '700' },
-
-  tabLabel: {
-    fontSize: 9,
-    marginTop: 1,
-    fontWeight: '400',
-    color: 'rgba(255,255,255,0.55)',
-  },
+  tabEmoji:        { fontSize: 25, opacity: 0.6 },
+  tabEmojiFocused: { fontSize: 26, opacity: 1   },
+  tabLabel:        { fontSize: IS_MOBILE ? 12 : 20, marginTop: 1, fontWeight: '400', color: 'rgba(255,255,255,0.55)' },
   tabLabelFocused: { fontWeight: '700', color: Colors.white },
 
+  // ── Screen slots ──
   screenContainer: {
     flex: 1,
     backgroundColor: Colors.background ?? '#F7F9FC',
@@ -314,19 +350,6 @@ const styles = StyleSheet.create({
   screenSlot:    { ...StyleSheet.absoluteFillObject },
   screenVisible: { zIndex: 1, opacity: 1 },
   screenHidden:  { zIndex: 0, opacity: 0 },
-
-  phoneBar: {
-    backgroundColor: Colors.white,
-    paddingVertical: 3,
-    paddingBottom: Spacing.xs,
-    alignItems: 'center',
-  },
-
-  phoneBarText: {
-    fontSize: Typography.sizes.xs,
-    fontWeight: Typography.weights.bold,
-    color: Colors.primary,
-  },
 });
 
 export default AppNavigator;
