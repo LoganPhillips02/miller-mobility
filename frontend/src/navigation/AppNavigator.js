@@ -22,6 +22,7 @@ import DealDetailScreen    from '../screens/DealDetailScreen';
 import ContactScreen       from '../screens/ContactScreen';
 import RentalsScreen       from '../screens/RentalsScreen';
 import AboutScreen         from '../screens/AboutScreen';
+import ADRCScreen          from '../screens/ADRCScreen';
 
 import { Colors, Typography, Spacing } from '../constants/theme';
 import { TabNavigationContext } from './TabNavigationContext';
@@ -42,6 +43,7 @@ const DealsStack     = createStackNavigator();
 const RentalsStack   = createStackNavigator();
 const AboutStack     = createStackNavigator();
 const ContactStack   = createStackNavigator();
+const ADRCStack      = createStackNavigator();
 
 const stackHeaderOptions = {
   headerStyle: { backgroundColor: Colors.primary },
@@ -121,7 +123,17 @@ const ContactTab = () => (
   </NavigationContainer>
 );
 
+const ADRCTab = () => (
+  <NavigationContainer independent={true}>
+    <ADRCStack.Navigator screenOptions={{ headerShown: false }}>
+      <ADRCStack.Screen name="ADRCMain" component={ADRCScreen} />
+    </ADRCStack.Navigator>
+  </NavigationContainer>
+);
+
 // ─── Tab config ───────────────────────────────────────────────────────────────
+// ADRC is intentionally omitted from the visible tab bar — it is only accessible
+// via the homepage banner. It still lives as a tab slot so switchTab('ADRC') works.
 const TABS = [
   { key: 'Inventory', icon: require('../../assets/navbar/mobility-scooter.png'), label: 'Products' },
   { key: 'Deals',     icon: require('../../assets/navbar/deals.png'),            label: 'Deals'    },
@@ -132,7 +144,6 @@ const TABS = [
 
 // ─── Top Navigation Bar ───────────────────────────────────────────────────────
 const TopNavBar = ({ activeTab, onTabPress, scrollY }) => {
-  // Brand strip only collapses on desktop. On mobile it stays fixed.
   const brandStripHeight = IS_MOBILE
     ? BRAND_STRIP_HEIGHT
     : scrollY.interpolate({
@@ -152,7 +163,7 @@ const TopNavBar = ({ activeTab, onTabPress, scrollY }) => {
   return (
     <View style={styles.navBar}>
 
-      {/* ── Brand strip (animated on desktop only) ── */}
+      {/* ── Brand strip ── */}
       <Animated.View
         style={[
           styles.brandStrip,
@@ -200,7 +211,7 @@ const TopNavBar = ({ activeTab, onTabPress, scrollY }) => {
         )}
       </Animated.View>
 
-      {/* ── Tab row (always visible) ── */}
+      {/* ── Tab row — only shows the 5 main tabs, not ADRC ── */}
       <View style={styles.tabRow}>
         {TABS.map((tab) => {
           const focused = activeTab === tab.key;
@@ -248,13 +259,11 @@ const AppNavigator = () => {
   const [activeTab, setActiveTab] = useState('Home');
   const [inventoryParams, setInventoryParams] = useState(null);
 
-  // Shared animated scroll value — screens report their scroll position here
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const switchTab = useCallback((tabKey, params) => {
     if (tabKey === 'Inventory' && params) setInventoryParams(params);
     setActiveTab(tabKey);
-    // Reset brand strip when switching tabs
     scrollY.setValue(0);
   }, [scrollY]);
 
@@ -270,6 +279,7 @@ const AppNavigator = () => {
     Rentals:   <RentalsTab />,
     About:     <AboutTab />,
     Contact:   <ContactTab />,
+    ADRC:      <ADRCTab />,
   };
 
   return (
