@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, SafeAreaView,
-  TouchableOpacity, Linking, LayoutAnimation, Platform, UIManager, Animated,
+  TouchableOpacity, Linking, LayoutAnimation, Platform, UIManager, Animated, Dimensions,
 } from 'react-native';
 import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
 import SiteFooter from '../components/SiteFooter';
 import { useTabNavigation } from '../navigation/TabNavigationContext';
+import { WEB_LAYOUT_BREAKPOINT } from '../constants/webLayout';
+import WebContentGutter from '../components/WebContentGutter';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_WEB_DESKTOP = Platform.OS === 'web' && SCREEN_WIDTH >= WEB_LAYOUT_BREAKPOINT;
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -148,6 +153,7 @@ const RentalsScreen = () => {
           ))}
         </View>
 
+        <WebContentGutter>
         {/* Rental items */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Available Rentals</Text>
@@ -198,6 +204,8 @@ const RentalsScreen = () => {
           </View>
         </View>
 
+        </WebContentGutter>
+
         <SiteFooter onTabPress={switchTab} />
       </Animated.ScrollView>
     </SafeAreaView>
@@ -221,7 +229,7 @@ const styles = StyleSheet.create({
   periodText:         { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm, letterSpacing: 0.5 },
 
   // Section
-  section:            { padding: Spacing.base, paddingTop: Spacing.xl },
+  section:            { paddingBottom: Spacing.base, paddingTop: Spacing.xl, paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
   sectionTitle:       { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.black, marginBottom: Spacing.xs },
   sectionSub:         { fontSize: Typography.sizes.sm, color: Colors.gray400, marginBottom: Spacing.lg },
 
@@ -241,19 +249,19 @@ const styles = StyleSheet.create({
   bulletText:         { flex: 1, fontSize: Typography.sizes.sm, color: Colors.gray600, lineHeight: Typography.sizes.sm * 1.5 },
 
   // Installation callout
-  installBlock:       { margin: Spacing.base, backgroundColor: Colors.gray50, borderRadius: Radius.xl, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border },
+  installBlock:       { marginVertical: Spacing.base, marginHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base, backgroundColor: Colors.gray50, borderRadius: Radius.xl, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border },
   installTitle:       { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.black, marginBottom: Spacing.sm },
   installText:        { fontSize: Typography.sizes.sm, color: Colors.gray600, lineHeight: Typography.sizes.sm * 1.6 },
 
   // Programs callout
-  programsBlock:      { marginHorizontal: Spacing.base, backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg, marginBottom: Spacing.base },
+  programsBlock:      { marginHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base, backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg, marginBottom: Spacing.base },
   programsTitle:      { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.white, marginBottom: Spacing.sm },
   programsText:       { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.8)', lineHeight: Typography.sizes.sm * 1.6, marginBottom: Spacing.md },
   programsButton:     { backgroundColor: 'rgba(255,255,255,0.15)', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.full, alignSelf: 'flex-start' },
   programsButtonText: { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm },
 
   // CTA
-  ctaBlock:           { margin: Spacing.base, marginTop: 0 },
+  ctaBlock:           { marginTop: 0, marginBottom: Spacing.base, marginHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
   ctaTitle:           { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.black, marginBottom: Spacing.sm },
   ctaText:            { fontSize: Typography.sizes.sm, color: Colors.gray600, lineHeight: Typography.sizes.sm * 1.6, marginBottom: Spacing.md },
   ctaRow:             { flexDirection: 'row', gap: Spacing.md },

@@ -10,6 +10,7 @@ import {
   Linking,
   Dimensions,
   Animated,
+  Platform,
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -25,6 +26,7 @@ import AboutScreen         from '../screens/AboutScreen';
 import ADRCScreen          from '../screens/ADRCScreen';
 
 import { Colors, Typography, Spacing } from '../constants/theme';
+import { WEB_BODY_MAX_WIDTH, WEB_BODY_SIDE_INSET } from '../constants/webLayout';
 import { TabNavigationContext } from './TabNavigationContext';
 
 // ─── Screen dimensions ────────────────────────────────────────────────────────
@@ -213,41 +215,70 @@ const TopNavBar = ({ activeTab, onTabPress, scrollY }) => {
 
       {/* ── Tab row — only shows the 5 main tabs, not ADRC ── */}
       <View style={styles.tabRow}>
-        {TABS.map((tab) => {
-          const focused = activeTab === tab.key;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.tabItem, focused && styles.tabItemFocused]}
-              onPress={() => onTabPress(tab.key)}
-              activeOpacity={0.75}
-            >
-              {IS_MOBILE ? (
-                <>
-                  <Image
-                    source={tab.icon}
-                    style={[styles.tabIconMobile, focused && styles.tabIconFocused]}
-                    resizeMode="contain"
-                  />
-                  <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
-                    {tab.label}
-                  </Text>
-                </>
-              ) : (
-                <View style={styles.tabInnerDesktop}>
-                  <Image
-                    source={tab.icon}
-                    style={[styles.tabIconDesktop, focused && styles.tabIconFocused]}
-                    resizeMode="contain"
-                  />
-                  <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
-                    {tab.label}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
+        {Platform.OS === 'web' && !IS_MOBILE ? (
+          <View style={styles.tabRowDesktopOuter}>
+            <View style={styles.tabRowDesktopInner}>
+              {TABS.map((tab) => {
+                const focused = activeTab === tab.key;
+                return (
+                  <TouchableOpacity
+                    key={tab.key}
+                    style={[styles.tabItem, focused && styles.tabItemFocused]}
+                    onPress={() => onTabPress(tab.key)}
+                    activeOpacity={0.75}
+                  >
+                    <View style={styles.tabInnerDesktop}>
+                      <Image
+                        source={tab.icon}
+                        style={[styles.tabIconDesktop, focused && styles.tabIconFocused]}
+                        resizeMode="contain"
+                      />
+                      <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
+                        {tab.label}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        ) : (
+          TABS.map((tab) => {
+            const focused = activeTab === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={[styles.tabItem, focused && styles.tabItemFocused]}
+                onPress={() => onTabPress(tab.key)}
+                activeOpacity={0.75}
+              >
+                {IS_MOBILE ? (
+                  <>
+                    <Image
+                      source={tab.icon}
+                      style={[styles.tabIconMobile, focused && styles.tabIconFocused]}
+                      resizeMode="contain"
+                    />
+                    <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
+                      {tab.label}
+                    </Text>
+                  </>
+                ) : (
+                  <View style={styles.tabInnerDesktop}>
+                    <Image
+                      source={tab.icon}
+                      style={[styles.tabIconDesktop, focused && styles.tabIconFocused]}
+                      resizeMode="contain"
+                    />
+                    <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
+                      {tab.label}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })
+        )}
       </View>
 
     </View>
@@ -407,6 +438,18 @@ const styles = StyleSheet.create({
   // ── Tab row ──
   tabRow: {
     flexDirection: 'row',
+    backgroundColor: Colors.primary,
+  },
+  tabRowDesktopOuter: {
+    width: '100%',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+  },
+  tabRowDesktopInner: {
+    flexDirection: 'row',
+    width: '100%',
+    maxWidth: WEB_BODY_MAX_WIDTH,
+    paddingHorizontal: WEB_BODY_SIDE_INSET,
     backgroundColor: Colors.primary,
   },
   tabItem: {

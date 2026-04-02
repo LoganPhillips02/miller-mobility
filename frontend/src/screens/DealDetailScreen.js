@@ -8,13 +8,20 @@ import {
   SafeAreaView,
   Linking,
   Animated,
+  Platform,
+  Dimensions,
 } from 'react-native';
+import WebContentGutter from '../components/WebContentGutter';
+import { WEB_LAYOUT_BREAKPOINT } from '../constants/webLayout';
 import { Colors, Typography, Spacing, Radius } from '../constants/theme';
 import { useDeal } from '../hooks/useDeals';
 import { dealBadgeText } from '../models';
 import SiteFooter from '../components/SiteFooter';
 import { LoadingSpinner, ErrorView, Divider, PrimaryButton } from '../components/ui';
 import { useTabNavigation } from '../navigation/TabNavigationContext';
+
+const SCREEN_W = Dimensions.get('window').width;
+const IS_WEB_DESKTOP = Platform.OS === 'web' && SCREEN_W >= WEB_LAYOUT_BREAKPOINT;
 
 const InfoRow = ({ label, value }) => (
   <View style={styles.infoRow}>
@@ -59,6 +66,7 @@ const DealDetailScreen = ({ route, navigation }) => {
           </View>
         </View>
 
+        <WebContentGutter>
         <View style={styles.body}>
           <Text style={styles.dealType}>{deal.dealTypeDisplay}</Text>
           <Text style={styles.title}>{deal.title}</Text>
@@ -91,6 +99,7 @@ const DealDetailScreen = ({ route, navigation }) => {
             <Text style={styles.viewProductsText}>Browse Qualifying Inventory →</Text>
           </TouchableOpacity>
         </View>
+        </WebContentGutter>
 
         <SiteFooter onTabPress={switchTab} />
       </Animated.ScrollView>
@@ -117,7 +126,7 @@ const styles = StyleSheet.create({
   heroIcon:            { fontSize: 64 },
   badge:               { position: 'absolute', bottom: Spacing.md, left: Spacing.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs, borderRadius: Radius.full },
   badgeText:           { color: Colors.white, fontSize: Typography.sizes.sm, fontWeight: Typography.weights.bold },
-  body:                { padding: Spacing.base },
+  body:                { paddingVertical: Spacing.base, paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
   dealType:            { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.bold, color: Colors.primary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.xs },
   title:               { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.black, marginBottom: Spacing.sm },
   expiryBanner:        { backgroundColor: '#FFF3CD', borderRadius: Radius.md, padding: Spacing.sm, marginBottom: Spacing.md },

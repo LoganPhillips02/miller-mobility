@@ -11,6 +11,8 @@ import {
   Dimensions,
   Image,
 } from 'react-native';
+import { getWebBodyContentWidth } from '../constants/webLayout';
+import WebContentGutter from '../components/WebContentGutter';
 import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
 import { useProducts, useCategories } from '../hooks/useProducts';
 import { useSearch } from '../hooks/useSearch';
@@ -25,59 +27,46 @@ const IS_MOBILE = SCREEN_WIDTH < 768;
 const NUM_COLUMNS = IS_MOBILE ? 2 : 4;
 const GRID_PADDING = Spacing.md * 2;
 const CARD_GAP = Spacing.sm;
+const GRID_OUTER_WIDTH = getWebBodyContentWidth();
 const CARD_WIDTH =
-  (SCREEN_WIDTH - GRID_PADDING - CARD_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
-const CAT_IMG_HEIGHT = IS_MOBILE ? 90 : 110;
+  (GRID_OUTER_WIDTH - GRID_PADDING - CARD_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+/** Square tile: full image visible (no vertical crop); letterboxing via contain. */
+const CAT_IMG_SIZE = CARD_WIDTH;
 
-// ── All remote URLs — avoids require() bundling issues entirely ──────────────
-// Once you confirm a local asset exists at the right path, swap a URL for:
-//   require('../../assets/products/stairlifts/s-lift-sre3050.jpg')
-// and handle it in CategoryCard with typeof === 'number'.
+// Local shots: require() so Metro bundles them. On native, require is a number; on
+// web it is often { uri, width, height } with an /assets/?unstable_path=… URL.
+// Remotes stay https strings — CategoryCard normalizes all three shapes.
 const CATEGORY_IMAGES = {
-  'stairlifts':
-    '../../assets/products/stairlifts/s-lift-sre3050.jpg',
-  'mobility-scooters':
-    '../../assets/products/scooters/m-scooter-sc15.webp',
-  'power-wheelchairs':
-    '../../assets/products/power_chairs/pw-chair-j27x.jpg',
-  'lift-chairs-power-recliners':
-    '../../assets/products/recliners/rec-pr764.webp',
-  'wheelchairs-transport-chairs':
-    '../../assets/products/wheelchairs/w-chair-ak2.webp',
-  'walkers-rollators':
-    'https://placehold.co/400x200/003366/FFFFFF?text=Walkers+%26+Rollators',
-  'vehicle-lifts':
-    'https://placehold.co/400x200/003366/FFFFFF?text=Vehicle+Lifts',
-  'patient-lifts':
-    'https://placehold.co/400x200/003366/FFFFFF?text=Patient+Lifts',
-  'ramps':
-    'https://placehold.co/400x200/003366/FFFFFF?text=Ramps',
-  'beds':
-    'https://placehold.co/400x200/003366/FFFFFF?text=Beds',
-  'vertical-platform-lifts':
-    'https://placehold.co/400x200/003366/FFFFFF?text=Platform+Lifts',
-  'vertical-platform-lifts-home-elevators':
-    'https://placehold.co/400x200/003366/FFFFFF?text=Home+Elevators',
-  'security-poles':
-    'https://placehold.co/400x200/003366/FFFFFF?text=Security+Poles',
-  'tables-trays':
-    'https://placehold.co/400x200/003366/FFFFFF?text=Tables+%26+Trays',
-  'wheelchair-accessible-vehicles':
-    'https://placehold.co/400x200/003366/FFFFFF?text=WAVs',
-  'scooters':
-    'https://placehold.co/400x200/003366/FFFFFF?text=Scooters',
-  'lifts':
-    'https://placehold.co/400x200/003366/FFFFFF?text=Lifts',
-  'accessories':
-    'https://placehold.co/400x200/003366/FFFFFF?text=Accessories',
+  'stairlifts': require('../../assets/products/stairLifts/s-lift-sre3050.jpg'),
+  'mobility-scooters': require('../../assets/products/scooters/m-scooter-sc15.webp'),
+  'power-wheelchairs': require('../../assets/products/powerChairs/pw-chair-j27x.jpg'),
+  'lift-chairs-power-recliners': require('../../assets/products/recliners/rec-pr764.webp'),
+  'wheelchairs-transport-chairs': require('../../assets/products/wheelchairs/w-chair-ak2.webp'),
+  'walkers-rollators': require('../../assets/products/walkers/walker-rrd.png'),
+  'vehicle-lifts': require('../../assets/products/vehicleLifts/car-lift-asl275.jpg'),
+  'patient-lifts': require('../../assets/products/patientLifts/p-lift-sa400.png'),
+  'ramps': require('../../assets/products/ramps/ramp.png'),
+  'beds':require('../../assets/products/beds/beds.jpg'),
+  'vertical-platform-lifts':require('../../assets/products/platformLifts/platform-lift.png'),
+  'security-poles':require('../../assets/products/poles/pole-bsb.png'),
+  'tables-trays':require('../../assets/products/tables/tables.png'),
+};
+
+const resolveCategoryImageSource = (src) => {
+  if (src == null) return null;
+  if (typeof src === 'number') return src;
+  if (typeof src === 'string') return { uri: src };
+  if (typeof src === 'object' && typeof src.uri === 'string') return src;
+  return null;
 };
 
 // ─── Category card ────────────────────────────────────────────────────────────
 const CategoryCard = ({ category, onPress }) => {
-  const imageUrl = CATEGORY_IMAGES[category.slug];
+  const imageSource = CATEGORY_IMAGES[category.slug];
   const [imgError, setImgError] = useState(false);
 
-  const showImage = imageUrl && !imgError;
+  const imageResolvedSource = resolveCategoryImageSource(imageSource);
+  const showImage = imageResolvedSource != null && !imgError;
 
   return (
     <TouchableOpacity
@@ -86,12 +75,14 @@ const CategoryCard = ({ category, onPress }) => {
       activeOpacity={0.8}
     >
       {showImage ? (
-        <Image
-          source={{ uri: imageUrl }}
-          style={{ width: CARD_WIDTH, height: CAT_IMG_HEIGHT }}
-          resizeMode="cover"
-          onError={() => setImgError(true)}
-        />
+        <View style={styles.categoryImageFrame}>
+          <Image
+            source={imageResolvedSource}
+            style={styles.categoryImage}
+            resizeMode="contain"
+            onError={() => setImgError(true)}
+          />
+        </View>
       ) : (
         <View style={styles.categoryPlaceholder} />
       )}
@@ -199,18 +190,20 @@ const InventoryScreen = ({ navigation, route }) => {
           </Text>
         </View>
 
-        <FlatList
-          data={categories}
-          keyExtractor={(item) => item.id?.toString() ?? item.slug}
-          numColumns={COLS}
-          key={`catgrid-${COLS}`}
-          contentContainerStyle={styles.categoryGrid}
-          columnWrapperStyle={styles.categoryGridRow}
-          renderItem={({ item }) => (
-            <CategoryCard category={item} onPress={handleCategoryPress} />
-          )}
-          scrollEnabled={false}
-        />
+        <WebContentGutter>
+          <FlatList
+            data={categories}
+            keyExtractor={(item) => item.id?.toString() ?? item.slug}
+            numColumns={COLS}
+            key={`catgrid-${COLS}`}
+            contentContainerStyle={styles.categoryGrid}
+            columnWrapperStyle={styles.categoryGridRow}
+            renderItem={({ item }) => (
+              <CategoryCard category={item} onPress={handleCategoryPress} />
+            )}
+            scrollEnabled={false}
+          />
+        </WebContentGutter>
 
         <SiteFooter onTabPress={switchTab} />
       </Animated.ScrollView>
@@ -345,7 +338,7 @@ const InventoryScreen = ({ navigation, route }) => {
             { useNativeDriver: false },
           )}
         >
-          {renderProductList()}
+          <WebContentGutter>{renderProductList()}</WebContentGutter>
           <SiteFooter onTabPress={switchTab} />
         </Animated.ScrollView>
       )}
@@ -458,9 +451,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
+  categoryImageFrame: {
+    width: CAT_IMG_SIZE,
+    height: CAT_IMG_SIZE,
+    backgroundColor: Colors.gray50,
+  },
+  categoryImage: {
+    width: CAT_IMG_SIZE,
+    height: CAT_IMG_SIZE,
+  },
   categoryPlaceholder: {
-    width: CARD_WIDTH,
-    height: CAT_IMG_HEIGHT,
+    width: CAT_IMG_SIZE,
+    height: CAT_IMG_SIZE,
     backgroundColor: Colors.gray50,
   },
   categoryCardName: {

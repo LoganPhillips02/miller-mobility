@@ -6,6 +6,8 @@ import {
   StyleSheet,
   SafeAreaView,
   Animated,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import { Colors, Typography, Spacing } from '../constants/theme';
 import { useDeals } from '../hooks/useDeals';
@@ -13,6 +15,11 @@ import DealCard from '../components/DealCard';
 import SiteFooter from '../components/SiteFooter';
 import { LoadingSpinner, ErrorView, EmptyState } from '../components/ui';
 import { useTabNavigation } from '../navigation/TabNavigationContext';
+import { WEB_LAYOUT_BREAKPOINT } from '../constants/webLayout';
+import WebContentGutter from '../components/WebContentGutter';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_WEB_DESKTOP = Platform.OS === 'web' && SCREEN_WIDTH >= WEB_LAYOUT_BREAKPOINT;
 
 const DealsScreen = ({ navigation }) => {
   const { switchTab, scrollY } = useTabNavigation();
@@ -62,7 +69,7 @@ const DealsScreen = ({ navigation }) => {
           { useNativeDriver: false }
         )}
       >
-        {renderBody()}
+        <WebContentGutter>{renderBody()}</WebContentGutter>
         <SiteFooter onTabPress={switchTab} />
       </Animated.ScrollView>
     </SafeAreaView>
@@ -74,7 +81,10 @@ const styles = StyleSheet.create({
   header:      { backgroundColor: Colors.primary, paddingHorizontal: Spacing.base, paddingVertical: Spacing.lg },
   headerTitle: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.white },
   headerSub:   { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.7)', marginTop: Spacing.xs },
-  list:        { padding: Spacing.base },
+  list: {
+    paddingVertical: Spacing.base,
+    paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base,
+  },
 });
 
 export default DealsScreen;

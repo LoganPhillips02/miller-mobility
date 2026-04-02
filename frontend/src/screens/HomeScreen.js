@@ -10,6 +10,7 @@ import {
   StatusBar,
   Image,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
 import { useFeaturedProducts, useCategories } from '../hooks/useProducts';
@@ -19,9 +20,12 @@ import DealCard from '../components/DealCard';
 import SiteFooter from '../components/SiteFooter';
 import { SectionHeader, LoadingSpinner } from '../components/ui';
 import { useTabNavigation } from '../navigation/TabNavigationContext';
+import { WEB_LAYOUT_BREAKPOINT } from '../constants/webLayout';
+import WebContentGutter from '../components/WebContentGutter';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const IS_MOBILE = SCREEN_WIDTH < 768;
+const IS_WEB_DESKTOP = Platform.OS === 'web' && SCREEN_WIDTH >= WEB_LAYOUT_BREAKPOINT;
 
 const CATEGORY_ICONS = {
   'stairlifts': '🪜',
@@ -96,6 +100,7 @@ const HomeScreen = () => {
           </TouchableOpacity>
         </View>
 
+        <WebContentGutter>
         {/* Categories */}
         <View style={styles.section}>
           <SectionHeader title="Shop by Category" onSeeAll={() => switchTab('Inventory')} />
@@ -200,6 +205,8 @@ const HomeScreen = () => {
           </View>
         </View>
 
+        </WebContentGutter>
+
         <SiteFooter onTabPress={switchTab} />
 
       </Animated.ScrollView>
@@ -219,7 +226,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   bannerWrapper: {
-    width: '100% ',
+    width: '100%',
     maxWidth: IS_MOBILE ? 500 : 400,
     marginVertical: Spacing.sm,
     marginHorizontal: IS_MOBILE ? 0 : Spacing.sm,
@@ -239,7 +246,7 @@ const styles = StyleSheet.create({
   },
 
   // Sections
-  section:        { marginTop: Spacing.xl, paddingHorizontal: Spacing.base },
+  section:        { marginTop: Spacing.xl, paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
   horizontalList: { paddingRight: Spacing.base },
 
   // Category chips

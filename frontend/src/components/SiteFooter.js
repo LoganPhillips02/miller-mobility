@@ -1,6 +1,11 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Linking, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Linking, Image, Platform, Dimensions } from 'react-native';
 import { Colors, Typography, Spacing } from '../constants/theme';
+import { WEB_LAYOUT_BREAKPOINT } from '../constants/webLayout';
+import WebContentGutter from './WebContentGutter';
+
+const _w = Dimensions.get('window').width;
+const IS_WEB_DESKTOP_FOOTER = Platform.OS === 'web' && _w >= WEB_LAYOUT_BREAKPOINT;
 
 const SOCIAL_LINKS = [
   { label: 'Facebook',   logo: require('../../assets/media/Facebook-Logo.png'),  url: 'https://www.facebook.com/millermobility/' },
@@ -15,7 +20,8 @@ const SiteFooter = ({ onTabPress }) => (
   <View style={styles.footer}>
     <View style={styles.accentBar} />
 
-    <View style={styles.inner}>
+    <WebContentGutter>
+    <View style={[styles.inner, IS_WEB_DESKTOP_FOOTER && styles.innerWebDesktop]}>
       {/* ── Left: contact info ── */}
       <View style={styles.contactColumn}>
         <Text style={styles.expertHeading}>ASK OUR EXPERTS</Text>
@@ -56,18 +62,20 @@ const SiteFooter = ({ onTabPress }) => (
       </View>
     </View>
 
-    <View style={styles.bottomBar}>
+    <View style={[styles.bottomBar, IS_WEB_DESKTOP_FOOTER && styles.bottomBarWebDesktop]}>
       <Text style={styles.copyright}>
         © {new Date().getFullYear()} Miller Mobility Products. All rights reserved.
       </Text>
     </View>
+    </WebContentGutter>
   </View>
 );
 
 const styles = StyleSheet.create({
   footer:        { backgroundColor: '#001F3F', marginTop: Spacing['2xl'] },
   accentBar:     { height: 4, backgroundColor: Colors.accent ?? '#E63946' },
-  inner:         { flexDirection: 'row', paddingHorizontal: Spacing.lg, paddingTop: Spacing.xl, paddingBottom: Spacing.lg, gap: Spacing.lg, alignItems: 'center' },
+  inner:              { flexDirection: 'row', paddingHorizontal: Spacing.lg, paddingTop: Spacing.xl, paddingBottom: Spacing.lg, gap: Spacing.lg, alignItems: 'center' },
+  innerWebDesktop:    { paddingHorizontal: 0 },
   contactColumn: { flex: 1 },
   expertHeading: { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.heavy, color: Colors.accent ?? '#E63946', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: Spacing.sm },
   phone:         { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.white, marginBottom: Spacing.md },
@@ -83,7 +91,8 @@ const styles = StyleSheet.create({
   linkGridItem:  { width: '33.33%', alignItems: 'center', paddingVertical: Spacing.sm },
   linkLogo:      { width: 40, height: 40 },
   linkText:      { fontSize: 9, color: 'rgba(255,255,255,0.75)', textAlign: 'center', marginTop: 4, flexShrink: 1 },
-  bottomBar:     { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.15)', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
+  bottomBar:          { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.15)', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
+  bottomBarWebDesktop: { paddingHorizontal: 0 },
   copyright:     { fontSize: Typography.sizes.xs, color: 'rgba(255,255,255,0.4)', textAlign: 'center' },
 });
 

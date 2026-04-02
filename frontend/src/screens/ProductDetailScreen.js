@@ -10,7 +10,10 @@ import {
   Linking,
   Dimensions,
   Animated,
+  Platform,
 } from 'react-native';
+import WebContentGutter from '../components/WebContentGutter';
+import { WEB_LAYOUT_BREAKPOINT } from '../constants/webLayout';
 import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
 import { useProduct } from '../hooks/useProducts';
 import SiteFooter from '../components/SiteFooter';
@@ -18,6 +21,7 @@ import { LoadingSpinner, ErrorView, ConditionBadge, StatusBadge, Divider, Primar
 import { useTabNavigation } from '../navigation/TabNavigationContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const IS_WEB_DESKTOP = Platform.OS === 'web' && SCREEN_WIDTH >= WEB_LAYOUT_BREAKPOINT;
 
 const SpecRow = ({ label, value }) => (
   <View style={styles.specRow}>
@@ -86,6 +90,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
           </View>
         )}
 
+        <WebContentGutter>
         {/* Content */}
         <View style={styles.body}>
           <View style={styles.badgeRow}>
@@ -149,6 +154,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
             </View>
           )}
         </View>
+        </WebContentGutter>
 
         <SiteFooter onTabPress={switchTab} />
       </Animated.ScrollView>
@@ -174,7 +180,7 @@ const styles = StyleSheet.create({
   imageDots:        { position: 'absolute', bottom: Spacing.sm, width: '100%', flexDirection: 'row', justifyContent: 'center', gap: Spacing.xs },
   dot:              { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.5)' },
   dotActive:        { backgroundColor: Colors.white },
-  body:             { padding: Spacing.base },
+  body:             { paddingVertical: Spacing.base, paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
   badgeRow:         { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm },
   name:             { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.black, marginBottom: Spacing.xs },
   price:            { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.primary, marginBottom: Spacing.sm },

@@ -11,6 +11,7 @@ import {
   TextInput,
   TouchableOpacity,
   Animated,
+  Dimensions,
 } from 'react-native';
 import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
 import { dealsService } from '../services/api';
@@ -18,6 +19,11 @@ import { createTradeInRequest, tradeInToPayload } from '../models';
 import { PrimaryButton, Divider } from '../components/ui';
 import SiteFooter from '../components/SiteFooter';
 import { useTabNavigation } from '../navigation/TabNavigationContext';
+import { WEB_LAYOUT_BREAKPOINT } from '../constants/webLayout';
+import WebContentGutter from '../components/WebContentGutter';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_WEB_DESKTOP = Platform.OS === 'web' && SCREEN_WIDTH >= WEB_LAYOUT_BREAKPOINT;
 
 const CONTACT_ITEMS = [
   { icon: '📞', label: 'Call Us',   value: '262-549-4900',           action: () => Linking.openURL('tel:+12625494900') },
@@ -95,7 +101,8 @@ const ContactScreen = () => {
             { useNativeDriver: false }
           )}
         >
-          <View style={styles.scroll}>
+          <WebContentGutter>
+          <View style={IS_WEB_DESKTOP ? styles.scrollWebDesktop : styles.scroll}>
 
             {activeTab === 'contact' ? (
               <View>
@@ -226,6 +233,7 @@ const ContactScreen = () => {
               </View>
             )}
           </View>
+          </WebContentGutter>
 
           <SiteFooter onTabPress={switchTab} />
         </Animated.ScrollView>
@@ -242,6 +250,7 @@ const styles = StyleSheet.create({
   tabText:              { fontSize: Typography.sizes.base, color: Colors.gray600, fontWeight: Typography.weights.medium },
   tabTextActive:        { color: Colors.primary, fontWeight: Typography.weights.bold },
   scroll:               { padding: Spacing.base },
+  scrollWebDesktop:     { paddingVertical: Spacing.base },
   heroSection:          { backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg, marginBottom: Spacing.lg },
   heroTitle:            { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.white },
   heroSub:              { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.75)', marginTop: Spacing.xs },

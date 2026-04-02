@@ -1,11 +1,16 @@
 import React from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView,
-  TouchableOpacity, Linking, Animated,
+  TouchableOpacity, Linking, Animated, Platform, Dimensions,
 } from 'react-native';
 import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
 import SiteFooter from '../components/SiteFooter';
 import { useTabNavigation } from '../navigation/TabNavigationContext';
+import { WEB_LAYOUT_BREAKPOINT } from '../constants/webLayout';
+import WebContentGutter from '../components/WebContentGutter';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_WEB_DESKTOP = Platform.OS === 'web' && SCREEN_WIDTH >= WEB_LAYOUT_BREAKPOINT;
 
 const VALUES = [
   { icon: '🏆', title: 'Decades of Expertise',     desc: 'Mike Miller began working in mobility equipment in the 1990s with Bruno — one of our key manufacturers.' },
@@ -37,6 +42,7 @@ const AboutScreen = () => {
           </Text>
         </View>
 
+        <WebContentGutter>
         {/* Story */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Our Story</Text>
@@ -94,6 +100,8 @@ const AboutScreen = () => {
           </View>
         </View>
 
+        </WebContentGutter>
+
         <SiteFooter onTabPress={switchTab} />
       </Animated.ScrollView>
     </SafeAreaView>
@@ -106,7 +114,7 @@ const styles = StyleSheet.create({
   heroTag:            { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.bold, color: 'rgba(255,255,255,0.6)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: Spacing.sm },
   heroTitle:          { fontSize: Typography.sizes['3xl'], fontWeight: Typography.weights.heavy, color: Colors.white, marginBottom: Spacing.sm },
   heroSub:            { fontSize: Typography.sizes.base, color: 'rgba(255,255,255,0.75)', lineHeight: Typography.sizes.base * 1.5 },
-  section:            { padding: Spacing.base, paddingTop: Spacing.xl },
+  section:            { paddingBottom: Spacing.base, paddingTop: Spacing.xl, paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
   sectionTitle:       { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.black, marginBottom: Spacing.md },
   bodyText:           { fontSize: Typography.sizes.base, color: Colors.gray600, lineHeight: Typography.sizes.base * 1.6, marginBottom: Spacing.md },
   card:               { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.base, marginBottom: Spacing.md, flexDirection: 'row', gap: Spacing.md, ...Shadows.sm },
@@ -114,10 +122,10 @@ const styles = StyleSheet.create({
   cardBody:           { flex: 1 },
   cardTitle:          { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.black, marginBottom: Spacing.xs },
   cardDesc:           { fontSize: Typography.sizes.sm, color: Colors.gray600, lineHeight: Typography.sizes.sm * 1.5 },
-  missionBlock:       { margin: Spacing.base, backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg },
+  missionBlock:       { marginVertical: Spacing.base, marginHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base, backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg },
   missionLabel:       { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.heavy, color: 'rgba(255,255,255,0.6)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: Spacing.sm },
   missionText:        { fontSize: Typography.sizes.base, color: Colors.white, lineHeight: Typography.sizes.base * 1.6 },
-  ctaBlock:           { margin: Spacing.base, marginTop: 0 },
+  ctaBlock:           { marginTop: 0, marginBottom: Spacing.base, marginHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
   ctaTitle:           { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.black, marginBottom: Spacing.md },
   ctaRow:             { flexDirection: 'row', gap: Spacing.md },
   ctaButton:          { backgroundColor: Colors.primary, paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, borderRadius: Radius.full },

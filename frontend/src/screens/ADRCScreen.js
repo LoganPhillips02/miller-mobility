@@ -12,11 +12,17 @@ import {
   Platform,
   Linking,
   Animated,
+  Dimensions,
 } from 'react-native';
 import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
 import SiteFooter from '../components/SiteFooter';
 import { PrimaryButton, Divider } from '../components/ui';
 import { useTabNavigation } from '../navigation/TabNavigationContext';
+import { WEB_LAYOUT_BREAKPOINT } from '../constants/webLayout';
+import WebContentGutter from '../components/WebContentGutter';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_WEB_DESKTOP = Platform.OS === 'web' && SCREEN_WIDTH >= WEB_LAYOUT_BREAKPOINT;
 
 // ─── Small reusable field wrapper ────────────────────────────────────────────
 const Field = ({ label, required, hint, children, style }) => (
@@ -127,6 +133,7 @@ const ADRCScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={styles.successContainer}>
+          <WebContentGutter>
           <View style={styles.successIcon}>
             <Text style={{ fontSize: 56 }}>🎉</Text>
           </View>
@@ -146,6 +153,7 @@ const ADRCScreen = ({ navigation }) => {
             onPress={() => switchTab('Home')}
             style={{ marginTop: Spacing['2xl'], alignSelf: 'stretch' }}
           />
+          </WebContentGutter>
         </ScrollView>
       </SafeAreaView>
     );
@@ -176,6 +184,7 @@ const ADRCScreen = ({ navigation }) => {
             </Text>
           </View>
 
+          <WebContentGutter>
           {/* ── How it works ── */}
           <View style={styles.howSection}>
             <Text style={styles.howTitle}>Here's How It Works</Text>
@@ -460,6 +469,8 @@ const ADRCScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
+
+          </WebContentGutter>
 
           <SiteFooter onTabPress={switchTab} />
         </Animated.ScrollView>
@@ -825,7 +836,8 @@ const styles = StyleSheet.create({
   // ── Success ──
   successContainer: {
     flex: 1,
-    padding: Spacing['2xl'],
+    paddingVertical: Spacing['2xl'],
+    paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing['2xl'],
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.md,
