@@ -27,7 +27,7 @@ export const Colors = {
   background: '#F7F9FC',
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
-  border: '#E2E8F0',
+  border: '#dddddd',
 };
 
 export const Typography = {

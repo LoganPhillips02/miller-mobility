@@ -5,6 +5,7 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
+  Pressable,
   StyleSheet,
   SafeAreaView,
   Animated,
@@ -30,12 +31,8 @@ const CARD_GAP = Spacing.sm;
 const GRID_OUTER_WIDTH = getWebBodyContentWidth();
 const CARD_WIDTH =
   (GRID_OUTER_WIDTH - GRID_PADDING - CARD_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
-/** Square tile: full image visible (no vertical crop); letterboxing via contain. */
 const CAT_IMG_SIZE = CARD_WIDTH;
 
-// Local shots: require() so Metro bundles them. On native, require is a number; on
-// web it is often { uri, width, height } with an /assets/?unstable_path=… URL.
-// Remotes stay https strings — CategoryCard normalizes all three shapes.
 const CATEGORY_IMAGES = {
   'stairlifts': require('../../assets/products/stairLifts/s-lift-sre3050.jpg'),
   'mobility-scooters': require('../../assets/products/scooters/m-scooter-sc15.webp'),
@@ -69,10 +66,12 @@ const CategoryCard = ({ category, onPress }) => {
   const showImage = imageResolvedSource != null && !imgError;
 
   return (
-    <TouchableOpacity
-      style={styles.categoryCard}
+    <Pressable
+      style={({ pressed, hovered }) => [
+        styles.categoryCard,
+        { opacity: pressed ? 0.7 : hovered ? 0.8 : 1 }
+      ]}
       onPress={() => onPress(category)}
-      activeOpacity={0.8}
     >
       {showImage ? (
         <View style={styles.categoryImageFrame}>
@@ -90,7 +89,7 @@ const CategoryCard = ({ category, onPress }) => {
       <Text style={styles.categoryCardName} numberOfLines={2}>
         {category.name}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -444,17 +443,19 @@ const styles = StyleSheet.create({
 
   categoryCard: {
     width: CARD_WIDTH,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.primary,
     borderRadius: Radius.lg,
     overflow: 'hidden',
-    ...Shadows.sm,
-    borderWidth: 1,
+    shadowColor: Colors.black,
+    shadowOpacity: 0.8,
+    shadowRadius: Radius.lg,
+    borderWidth: IS_MOBILE ? 2 : 5,
     borderColor: Colors.border,
   },
   categoryImageFrame: {
     width: CAT_IMG_SIZE,
     height: CAT_IMG_SIZE,
-    backgroundColor: Colors.gray50,
+    backgroundColor: Colors.white,
   },
   categoryImage: {
     width: CAT_IMG_SIZE,
@@ -466,14 +467,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gray50,
   },
   categoryCardName: {
-    fontSize: IS_MOBILE ? Typography.sizes.xs : Typography.sizes.sm,
+    fontSize: IS_MOBILE ? Typography.sizes.lg : Typography.sizes.xl,
     fontWeight: Typography.weights.bold,
-    color: Colors.black,
+    color: Colors.white,
     textAlign: 'center',
-    lineHeight: (IS_MOBILE ? Typography.sizes.xs : Typography.sizes.sm) * 1.3,
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.sm,
-    paddingHorizontal: Spacing.sm,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
   },
 
   productGrid: {

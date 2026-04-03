@@ -230,7 +230,7 @@ const TopNavBar = ({ activeTab, onTabPress, scrollY }) => {
                     <View style={styles.tabInnerDesktop}>
                       <Image
                         source={tab.icon}
-                        style={[styles.tabIconDesktop, focused && styles.tabIconFocused]}
+                        style={[styles.tabIcon, focused && styles.tabIconFocused]}
                         resizeMode="contain"
                       />
                       <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
@@ -256,7 +256,7 @@ const TopNavBar = ({ activeTab, onTabPress, scrollY }) => {
                   <>
                     <Image
                       source={tab.icon}
-                      style={[styles.tabIconMobile, focused && styles.tabIconFocused]}
+                      style={[styles.tabIcon, focused && styles.tabIconFocused]}
                       resizeMode="contain"
                     />
                     <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
@@ -267,7 +267,7 @@ const TopNavBar = ({ activeTab, onTabPress, scrollY }) => {
                   <View style={styles.tabInnerDesktop}>
                     <Image
                       source={tab.icon}
-                      style={[styles.tabIconDesktop, focused && styles.tabIconFocused]}
+                      style={[styles.tabIcon, focused && styles.tabIconFocused]}
                       resizeMode="contain"
                     />
                     <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
@@ -465,9 +465,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
 
-  tabIconMobile: {
-    width: 26,
-    height: 26,
+  tabIcon: {
+    width: IS_MOBILE? 30 : 40,
+    height: IS_MOBILE? 30 : 40,
     opacity: 0.7,
     tintColor: Colors.white,
   },
@@ -476,18 +476,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.md,
   },
-  tabIconDesktop: {
-    width: 30,
-    height: 30,
-    opacity: 0.7,
-    tintColor: Colors.white,
-  },
   tabIconFocused: {
     opacity: 1,
   },
 
-  tabLabel:        { fontSize: IS_MOBILE ? 12 : 24, marginTop: IS_MOBILE ? 1 : 0, fontWeight: '400', color: 'rgba(255, 255, 255, 0.7)' },
-  tabLabelFocused: { fontWeight: '700', color: Colors.white },
+  tabLabel:        { 
+    fontSize: IS_MOBILE ? 16 : 30, 
+    marginTop: IS_MOBILE ? 6 : 0, 
+    fontWeight: '400', 
+    color: 'rgba(255, 255, 255, 0.7)' 
+  },
+  tabLabelFocused: { 
+    fontWeight: '700', 
+    color: Colors.white 
+  },
 
   // ── Screen slots ──
   screenContainer: {

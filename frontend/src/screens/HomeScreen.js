@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   Animated,
   FlatList,
   TouchableOpacity,
+  Pressable,
   StyleSheet,
   SafeAreaView,
   StatusBar,
@@ -26,25 +27,69 @@ import WebContentGutter from '../components/WebContentGutter';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const IS_MOBILE = SCREEN_WIDTH < 768;
 const IS_WEB_DESKTOP = Platform.OS === 'web' && SCREEN_WIDTH >= WEB_LAYOUT_BREAKPOINT;
+const HOME_CAT_IMG_SIZE = IS_MOBILE ? 120 : 160;
+const CARD_HEIGHT = HOME_CAT_IMG_SIZE + 50;
 
-const CATEGORY_ICONS = {
-  'stairlifts': '🪜',
-  'mobility-scooters': '🛵',
-  'power-wheelchairs': '⚡',
-  'lift-chairs-power-recliners': '🪑',
-  'wheelchairs-transport-chairs': '♿',
-  'walkers-rollators': '🦯',
-  'vehicle-lifts': '🚗',
-  'patient-lifts': '🏥',
-  'ramps': '📐',
-  'beds': '🛏️',
-  'vertical-platform-lifts-home-elevators': '🏠',
-  'security-poles': '🔒',
-  'tables-trays': '🍽️',
-  'wheelchair-accessible-vehicles': '🚐',
-  'scooters': '🛵',
-  'lifts': '🔧',
-  'accessories': '🎒',
+const CATEGORY_IMAGES = {
+  'stairlifts': require('../../assets/products/stairLifts/s-lift-sre3050.jpg'),
+  'mobility-scooters': require('../../assets/products/scooters/m-scooter-sc15.webp'),
+  'power-wheelchairs': require('../../assets/products/powerChairs/pw-chair-j27x.jpg'),
+  'lift-chairs-power-recliners': require('../../assets/products/recliners/rec-pr764.webp'),
+  'wheelchairs-transport-chairs': require('../../assets/products/wheelchairs/w-chair-ak2.webp'),
+  'walkers-rollators': require('../../assets/products/walkers/walker-rrd.png'),
+  'vehicle-lifts': require('../../assets/products/vehicleLifts/car-lift-asl275.jpg'),
+  'patient-lifts': require('../../assets/products/patientLifts/p-lift-sa400.png'),
+  'ramps': require('../../assets/products/ramps/ramp.png'),
+  'beds':require('../../assets/products/beds/beds.jpg'),
+  'vertical-platform-lifts':require('../../assets/products/platformLifts/platform-lift.png'),
+  'security-poles':require('../../assets/products/poles/pole-bsb.png'),
+  'tables-trays':require('../../assets/products/tables/tables.png'),
+};
+
+const resolveCategoryImageSource = (src) => {
+  if (src == null) return null;
+  if (typeof src === 'number') return src;
+  if (typeof src === 'string') return { uri: src };
+  if (typeof src === 'object' && typeof src.uri === 'string') return src;
+  return null;
+};
+
+// ─── Category card ────────────────────────────────────────────────────────────
+const CategoryCard = ({ category, onPress }) => {
+  const imageSource = CATEGORY_IMAGES[category.slug];
+  const [imgError, setImgError] = useState(false);
+  const imageResolvedSource = resolveCategoryImageSource(imageSource);
+  const showImage = imageResolvedSource != null && !imgError;
+
+  return (
+    <Pressable
+      style={({ pressed, hovered }) => [
+        styles.categoryCard,
+        { opacity: pressed ? 0.7 : hovered ? 0.8 : 1 }
+      ]}
+      onPress={() => onPress(category)}
+    >
+      <View style={styles.categoryImageFrame}>
+        {showImage ? (
+          <Image
+            source={imageResolvedSource}
+            style={styles.categoryImage}
+            resizeMode="contain"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <View style={styles.categoryPlaceholder} />
+        )}
+      </View>
+
+      {/* Text wrapper – fills remaining space and centers content */}
+      <View style={styles.categoryTextWrapper}>
+        <Text style={styles.categoryCardName} numberOfLines={2}>
+          {category.name}
+        </Text>
+      </View>
+    </Pressable>
+  );
 };
 
 const HomeScreen = () => {
@@ -75,12 +120,12 @@ const HomeScreen = () => {
             style={styles.bannerWrapper}
             onPress={() => switchTab('Inventory')}
           >
-          <View style={styles.bannerBackground}>
-            <Image
-              source={require('../../assets/home/Deal-of-the-month-March.webp')}
-              style={styles.promoBanner}
-              resizeMode="cover"
-            />
+            <View style={styles.bannerBackground}>
+              <Image
+                source={require('../../assets/home/Deal-of-the-month.webp')}
+                style={styles.promoBanner}
+                resizeMode="contain"
+              />
             </View>
           </TouchableOpacity>
 
@@ -94,7 +139,7 @@ const HomeScreen = () => {
               <Image
                 source={require('../../assets/home/ADRC-Vehicle-Lift.webp')}
                 style={styles.promoBanner}
-                resizeMode="cover"
+                resizeMode="contain"
               />
             </View>
           </TouchableOpacity>
@@ -112,14 +157,7 @@ const HomeScreen = () => {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.horizontalList}
               renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.categoryChip}
-                  onPress={() => switchTab('Inventory', { category: item.slug, categoryName: item.name })}
-                >
-                  <Text style={styles.categoryIcon}>{CATEGORY_ICONS[item.slug] ?? '📦'}</Text>
-                  <Text style={styles.categoryName}>{item.name}</Text>
-                  {item.productCount > 0 && <Text style={styles.categoryCount}>{item.productCount}</Text>}
-                </TouchableOpacity>
+                <CategoryCard category={item} onPress={(cat) => switchTab('Inventory', { category: cat.slug, categoryName: cat.name })} />
               )}
             />
           )}
@@ -224,56 +262,170 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.md,
+    gap: Spacing.md,
   },
   bannerWrapper: {
-    width: '100%',
+    flex: IS_MOBILE ? undefined : 1,          // desktop: equal width
+    width: IS_MOBILE ? '100%' : undefined,    // mobile: full width
     maxWidth: IS_MOBILE ? 500 : 400,
-    marginVertical: Spacing.sm,
-    marginHorizontal: IS_MOBILE ? 0 : Spacing.sm,
-    alignSelf: 'center',  
+    alignSelf: 'center',
   },
   bannerBackground: {
     backgroundColor: '#F5F5F5',
     borderRadius: Radius.lg,
-    padding: Spacing.sm,
+    overflow: 'hidden',          // keeps border radius but does NOT crop image because of contain
     ...Shadows.md,
-    overflow: 'hidden',
+    // Set a fixed height for both banners – this gives equal height on desktop
+    // and equal width on mobile (full width) with consistent aspect
+    height: IS_MOBILE ? 200 : 350,   // adjust these values as needed
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   promoBanner: {
     width: '100%',
-    height: IS_MOBILE ? 200 : 500,
-    borderRadius: Radius.md,
+    height: '100%',              // fills the container completely
+    resizeMode: 'contain',       // shows full image without cropping
   },
 
   // Sections
-  section:        { marginTop: Spacing.xl, paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
-  horizontalList: { paddingRight: Spacing.base },
+  section:        { 
+    marginTop: Spacing.xl, 
+    paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base 
+  },
+  horizontalList: { 
+    paddingRight: Spacing.base 
+  },
 
   // Category chips
-  categoryChip:  { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.md, marginRight: Spacing.sm, alignItems: 'center', minWidth: 80, ...Shadows.sm },
-  categoryIcon:  { fontSize: 28, marginBottom: Spacing.xs },
-  categoryName:  { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.semibold, color: Colors.black, textAlign: 'center' },
-  categoryCount: { fontSize: Typography.sizes.xs, color: Colors.gray400, marginTop: 2 },
+  categoryCard: {
+    width: HOME_CAT_IMG_SIZE,
+    height: HOME_CAT_IMG_SIZE + (IS_MOBILE? 50 : 60),               // ← fixed height
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.lg,
+    overflow: 'hidden',
+    marginRight: Spacing.sm,
+    alignItems: 'center',              // horizontal centering
+    ...Shadows.sm,
+  },
+  
+  categoryImageFrame: {
+    width: '100%',
+    height: HOME_CAT_IMG_SIZE,
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  categoryImage: {
+    width: '100%',
+    height: '100%',
+  },
+  
+  categoryPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: Colors.gray50,
+  },
+  
+  categoryTextWrapper: {
+    flex: 1,                           // takes all remaining height
+    justifyContent: 'center',          // vertically centers the text
+    alignItems: 'center',              // horizontally centers the text
+    paddingHorizontal: Spacing.xs,
+  },
+  
+  categoryCardName: {
+    fontSize: IS_MOBILE? 16 : 20,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.white,
+    textAlign: 'center',
+    // No margin needed – centering is handled by the wrapper
+  },
 
   // Cards
-  productCard: { width: 200, marginRight: Spacing.md },
-  dealCard:    { width: 260, marginRight: Spacing.md },
+  productCard: { 
+    width: 200, 
+    marginRight: Spacing.md 
+  },
+  dealCard:    { 
+    width: 260, 
+    marginRight: Spacing.md 
+  },
 
   // Why card
-  whyCard:           { backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg, marginBottom: Spacing.lg },
-  whyTitle:          { fontSize: Typography.sizes.lg, fontWeight: Typography.weights.heavy, color: Colors.white, marginBottom: Spacing.md },
-  whyRow:            { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm, gap: Spacing.md },
-  whyIcon:           { fontSize: 20 },
-  whyText:           { fontSize: Typography.sizes.base, color: 'rgba(255,255,255,0.85)', flex: 1 },
-  contactButton:     { marginTop: Spacing.md, backgroundColor: 'rgba(255,255,255,0.15)', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.full, alignSelf: 'flex-start' },
-  contactButtonText: { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm },
+  whyCard:           { 
+    backgroundColor: Colors.primary, 
+    borderRadius: Radius.xl, 
+    padding: Spacing.lg, 
+    marginBottom: Spacing.lg 
+  },
+  whyTitle:          { 
+    fontSize: Typography.sizes.lg, 
+    fontWeight: Typography.weights.heavy, 
+    color: Colors.white, 
+    marginBottom: Spacing.md 
+  },
+  whyRow:            { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginBottom: Spacing.sm, 
+    gap: Spacing.md 
+  },
+  whyIcon:           { 
+    fontSize: 20 
+  },
+  whyText:           { 
+    fontSize: Typography.sizes.base, 
+    color: 'rgba(255,255,255,0.85)', 
+    flex: 1 
+  },
+  contactButton:     { 
+    marginTop: Spacing.md, 
+    backgroundColor: 'rgba(255,255,255,0.15)', 
+    paddingVertical: Spacing.sm, 
+    paddingHorizontal: Spacing.lg, 
+    borderRadius: Radius.full, 
+    alignSelf: 'flex-start' 
+  },
+  contactButtonText: { 
+    color: Colors.white, 
+    fontWeight: Typography.weights.bold, 
+    fontSize: Typography.sizes.sm 
+  },
 
   // Rentals strip
-  rentalsStrip:      { backgroundColor: Colors.gray50, borderRadius: Radius.xl, padding: Spacing.lg, borderWidth: 1.5, borderColor: Colors.border, marginBottom: Spacing.lg },
-  rentalsTitle:      { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.black, marginBottom: Spacing.sm },
-  rentalsText:       { fontSize: Typography.sizes.sm, color: Colors.gray600, lineHeight: Typography.sizes.sm * 1.6, marginBottom: Spacing.md },
-  rentalsButton:     { backgroundColor: Colors.primary, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.full, alignSelf: 'flex-start' },
-  rentalsButtonText: { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm },
+  rentalsStrip:      { 
+    backgroundColor: Colors.gray50, 
+    borderRadius: Radius.xl, 
+    padding: Spacing.lg, 
+    borderWidth: 1.5, 
+    borderColor: Colors.border, 
+    marginBottom: Spacing.lg 
+  },
+  rentalsTitle:      { 
+    fontSize: Typography.sizes.md, 
+    fontWeight: Typography.weights.bold, 
+    color: Colors.black, 
+    marginBottom: Spacing.sm 
+  },
+  rentalsText:       { 
+    fontSize: Typography.sizes.sm, 
+    color: Colors.gray600, 
+    lineHeight: Typography.sizes.sm * 1.6,
+    marginBottom: Spacing.md 
+  },
+  rentalsButton:     { 
+    backgroundColor: Colors.primary, 
+    paddingVertical: Spacing.sm, 
+    paddingHorizontal: Spacing.lg, 
+    borderRadius: Radius.full, 
+    alignSelf: 'flex-start' 
+  },
+  rentalsButtonText: { 
+    color: Colors.white, 
+    fontWeight: Typography.weights.bold, 
+    fontSize: Typography.sizes.sm 
+  },
 });
 
 export default HomeScreen;
