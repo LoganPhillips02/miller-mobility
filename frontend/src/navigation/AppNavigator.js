@@ -366,21 +366,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
-    paddingHorizontal: Spacing.sm,
+    // Increased side padding for space on left/right edges
+    paddingHorizontal: IS_MOBILE ? 10 : 50,
     paddingVertical: Spacing.xs,
     gap: Spacing.xs,
   },
   brandLeft: {
-    flex: 2,
+    flex: 1,               // equal to center & right → keeps phone centered
+    alignItems: 'flex-start',
     justifyContent: 'center',
   },
   brandCenter: {
-    flex: 2,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   brandRight: {
-    flex: 3,
+    flex: 1,
     alignItems: 'flex-end',
     justifyContent: 'center',
     gap: 2,
@@ -397,17 +399,17 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   phoneIcon: {
-    width:  IS_MOBILE ? 18 : 28,
-    height: IS_MOBILE ? 18 : 28,
+    width:  IS_MOBILE ? 18 : 35,
+    height: IS_MOBILE ? 18 : 35,
   },
   phoneBarText: {
-    fontSize: IS_MOBILE ? Typography.sizes.md : Typography.sizes['2xl'],
+    fontSize: IS_MOBILE ? 18 : 35,
     fontWeight: Typography.weights.heavy,
     color: Colors.error,
     textAlign: 'center',
   },
   phoneSubText: {
-    fontSize: IS_MOBILE ? 8 : Typography.sizes.lg,
+    fontSize: IS_MOBILE ? 8 : 20,
     fontWeight: Typography.weights.medium,
     color: Colors.primary,
     textAlign: 'center',
@@ -435,7 +437,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 
-  // ── Tab row ──
+  // ── Tab row (unchanged) ──
   tabRow: {
     flexDirection: 'row',
     backgroundColor: Colors.primary,

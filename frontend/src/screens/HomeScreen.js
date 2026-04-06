@@ -112,137 +112,136 @@ const HomeScreen = () => {
         )}
       >
 
-        {/* Promo Banners */}
-        <View style={styles.bannerRow}>
-          {/* Deal of the Month */}
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={styles.bannerWrapper}
-            onPress={() => switchTab('Inventory')}
-          >
-            <View style={styles.bannerBackground}>
-              <Image
-                source={require('../../assets/home/Deal-of-the-month.webp')}
-                style={styles.promoBanner}
-                resizeMode="contain"
-              />
-            </View>
-          </TouchableOpacity>
-
-          {/* ADRC banner */}
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={styles.bannerWrapper}
-            onPress={() => switchTab('ADRC')}
-          >
-            <View style={styles.bannerBackground}>
-              <Image
-                source={require('../../assets/home/ADRC-Vehicle-Lift.webp')}
-                style={styles.promoBanner}
-                resizeMode="contain"
-              />
-            </View>
-          </TouchableOpacity>
-        </View>
-
         <WebContentGutter>
-        {/* Categories */}
-        <View style={styles.section}>
-          <SectionHeader title="Shop by Category" onSeeAll={() => switchTab('Inventory')} />
-          {categoriesLoading ? <LoadingSpinner size="small" /> : (
-            <FlatList
-              data={categories}
-              keyExtractor={(item) => item.id?.toString() ?? item.slug}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalList}
-              renderItem={({ item }) => (
-                <CategoryCard category={item} onPress={(cat) => switchTab('Inventory', { category: cat.slug, categoryName: cat.name })} />
-              )}
-            />
-          )}
-        </View>
+          {/* Promo Banners – now inside WebContentGutter, same width as categories */}
+          <View style={styles.bannerRow}>
+            {/* Deal of the Month */}
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.bannerWrapper}
+              onPress={() => switchTab('Inventory')}
+            >
+              <View style={styles.bannerBackground}>
+                <Image
+                  source={require('../../assets/home/Deal-of-the-month.webp')}
+                  style={styles.promoBanner}
+                  resizeMode="contain"   // full image, no cropping
+                />
+              </View>
+            </TouchableOpacity>
 
-        {/* Featured Deals */}
-        {(featuredDeals.length > 0 || dealsLoading) && (
+            {/* ADRC banner */}
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.bannerWrapper}
+              onPress={() => switchTab('ADRC')}
+            >
+              <View style={styles.bannerBackground}>
+                <Image
+                  source={require('../../assets/home/ADRC-Vehicle-Lift.png')}
+                  style={styles.promoBanner}
+                  resizeMode="contain"   // full image, no cropping
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Categories */}
           <View style={styles.section}>
-            <SectionHeader title="Current Deals" onSeeAll={() => switchTab('Deals')} />
-            {dealsLoading ? <LoadingSpinner size="small" /> : (
+            <SectionHeader title="Shop by Category" onSeeAll={() => switchTab('Inventory')} />
+            {categoriesLoading ? <LoadingSpinner size="small" /> : (
               <FlatList
-                data={featuredDeals}
+                data={categories}
                 keyExtractor={(item) => item.id?.toString() ?? item.slug}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.horizontalList}
                 renderItem={({ item }) => (
-                  <DealCard
-                    deal={item}
-                    style={styles.dealCard}
-                    onPress={() => switchTab('Deals')}
+                  <CategoryCard category={item} onPress={(cat) => switchTab('Inventory', { category: cat.slug, categoryName: cat.name })} />
+                )}
+              />
+            )}
+          </View>
+
+          {/* Featured Deals */}
+          {(featuredDeals.length > 0 || dealsLoading) && (
+            <View style={styles.section}>
+              <SectionHeader title="Current Deals" onSeeAll={() => switchTab('Deals')} />
+              {dealsLoading ? <LoadingSpinner size="small" /> : (
+                <FlatList
+                  data={featuredDeals}
+                  keyExtractor={(item) => item.id?.toString() ?? item.slug}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.horizontalList}
+                  renderItem={({ item }) => (
+                    <DealCard
+                      deal={item}
+                      style={styles.dealCard}
+                      onPress={() => switchTab('Deals')}
+                    />
+                  )}
+                />
+              )}
+            </View>
+          )}
+
+          {/* Featured Inventory */}
+          <View style={styles.section}>
+            <SectionHeader title="Featured Products" onSeeAll={() => switchTab('Inventory', { featured: true })} />
+            {featuredLoading ? <LoadingSpinner size="small" /> : (
+              <FlatList
+                data={featured.slice(0, 6)}
+                keyExtractor={(item) => item.id?.toString()}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalList}
+                renderItem={({ item }) => (
+                  <ProductCard
+                    product={item}
+                    style={styles.productCard}
+                    onPress={() => switchTab('Inventory')}
                   />
                 )}
               />
             )}
           </View>
-        )}
 
-        {/* Featured Inventory */}
-        <View style={styles.section}>
-          <SectionHeader title="Featured Products" onSeeAll={() => switchTab('Inventory', { featured: true })} />
-          {featuredLoading ? <LoadingSpinner size="small" /> : (
-            <FlatList
-              data={featured.slice(0, 6)}
-              keyExtractor={(item) => item.id?.toString()}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalList}
-              renderItem={({ item }) => (
-                <ProductCard
-                  product={item}
-                  style={styles.productCard}
-                  onPress={() => switchTab('Inventory')}
-                />
-              )}
-            />
-          )}
-        </View>
-
-        {/* Why Miller Mobility */}
-        <View style={styles.section}>
-          <View style={styles.whyCard}>
-            <Text style={styles.whyTitle}>Why Miller Mobility?</Text>
-            {[
-              { icon: '🏆', text: 'Family owned & operated since 2004' },
-              { icon: '🔧', text: 'Factory-trained installation & service experts' },
-              { icon: '💳', text: 'Flexible financing — ask about 0% APR options' },
-              { icon: '🤝', text: 'Preferred provider for ADRC, IRIS & CLTS programs' },
-              { icon: '🐕', text: 'A warm, welcoming showroom in Oconomowoc, WI' },
-            ].map(({ icon, text }) => (
-              <View key={text} style={styles.whyRow}>
-                <Text style={styles.whyIcon}>{icon}</Text>
-                <Text style={styles.whyText}>{text}</Text>
-              </View>
-            ))}
-            <TouchableOpacity style={styles.contactButton} onPress={() => switchTab('Contact')}>
-              <Text style={styles.contactButtonText}>Contact Us →</Text>
-            </TouchableOpacity>
+          {/* Why Miller Mobility */}
+          <View style={styles.section}>
+            <View style={styles.whyCard}>
+              <Text style={styles.whyTitle}>Why Miller Mobility?</Text>
+              {[
+                { icon: '🏆', text: 'Family owned & operated since 2004' },
+                { icon: '🔧', text: 'Factory-trained installation & service experts' },
+                { icon: '💳', text: 'Flexible financing — ask about 0% APR options' },
+                { icon: '🤝', text: 'Preferred provider for ADRC, IRIS & CLTS programs' },
+                { icon: '🐕', text: 'A warm, welcoming showroom in Oconomowoc, WI' },
+              ].map(({ icon, text }) => (
+                <View key={text} style={styles.whyRow}>
+                  <Text style={styles.whyIcon}>{icon}</Text>
+                  <Text style={styles.whyText}>{text}</Text>
+                </View>
+              ))}
+              <TouchableOpacity style={styles.contactButton} onPress={() => switchTab('Contact')}>
+                <Text style={styles.contactButtonText}>Contact Us →</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
 
-        {/* Rentals promo strip */}
-        <View style={styles.section}>
-          <View style={styles.rentalsStrip}>
-            <Text style={styles.rentalsTitle}>🔑 Need Equipment Temporarily?</Text>
-            <Text style={styles.rentalsText}>
-              Miller Mobility rents wheelchairs, scooters, stairlifts, lift chairs, patient lifts, and ramps by the
-              day, week, or month. Pickup in store or we'll deliver.
-            </Text>
-            <TouchableOpacity style={styles.rentalsButton} onPress={() => switchTab('Rentals')}>
-              <Text style={styles.rentalsButtonText}>View Rentals →</Text>
-            </TouchableOpacity>
+          {/* Rentals promo strip */}
+          <View style={styles.section}>
+            <View style={styles.rentalsStrip}>
+              <Text style={styles.rentalsTitle}>🔑 Need Equipment Temporarily?</Text>
+              <Text style={styles.rentalsText}>
+                Miller Mobility rents wheelchairs, scooters, stairlifts, lift chairs, patient lifts, and ramps by the
+                day, week, or month. Pickup in store or we'll deliver.
+              </Text>
+              <TouchableOpacity style={styles.rentalsButton} onPress={() => switchTab('Rentals')}>
+                <Text style={styles.rentalsButtonText}>View Rentals →</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-
         </WebContentGutter>
 
         <SiteFooter onTabPress={switchTab} />
@@ -256,35 +255,36 @@ const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: Colors.background },
   scroll: { flex: 1 },
 
-  // Promo banners 
+  // Promo banners – inside WebContentGutter, with added paddingTop and paddingHorizontal
   bannerRow: {
     flexDirection: IS_MOBILE ? 'column' : 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.md,
     gap: Spacing.md,
+    paddingTop: Spacing.md,          // slight space above
+    paddingHorizontal: Spacing.sm,   // slight space on left/right
+    marginBottom: Spacing.lg,
   },
   bannerWrapper: {
-    flex: IS_MOBILE ? undefined : 1,          // desktop: equal width
-    width: IS_MOBILE ? '100%' : undefined,    // mobile: full width
-    maxWidth: IS_MOBILE ? 500 : 400,
+    flex: IS_MOBILE ? undefined : 1,
+    width: IS_MOBILE ? '100%' : undefined,
+    maxWidth: IS_MOBILE ? 500 : 600,
     alignSelf: 'center',
   },
   bannerBackground: {
     backgroundColor: '#F5F5F5',
     borderRadius: Radius.lg,
-    overflow: 'hidden',          // keeps border radius but does NOT crop image because of contain
+    overflow: 'hidden',
     ...Shadows.md,
-    // Set a fixed height for both banners – this gives equal height on desktop
-    // and equal width on mobile (full width) with consistent aspect
-    height: IS_MOBILE ? 200 : 350,   // adjust these values as needed
+    // Increased height to accommodate "contain" without cropping
+    height: IS_MOBILE ? 250 : 400,
     justifyContent: 'center',
     alignItems: 'center',
   },
   promoBanner: {
     width: '100%',
-    height: '100%',              // fills the container completely
-    resizeMode: 'contain',       // shows full image without cropping
+    height: '100%',
+    // resizeMode set inline to "contain" (see JSX)
   },
 
   // Sections
@@ -299,12 +299,12 @@ const styles = StyleSheet.create({
   // Category chips
   categoryCard: {
     width: HOME_CAT_IMG_SIZE,
-    height: HOME_CAT_IMG_SIZE + (IS_MOBILE? 50 : 60),               // ← fixed height
+    height: HOME_CAT_IMG_SIZE + (IS_MOBILE? 50 : 60),
     backgroundColor: Colors.primary,
     borderRadius: Radius.lg,
     overflow: 'hidden',
     marginRight: Spacing.sm,
-    alignItems: 'center',              // horizontal centering
+    alignItems: 'center',
     ...Shadows.sm,
   },
   
@@ -328,9 +328,9 @@ const styles = StyleSheet.create({
   },
   
   categoryTextWrapper: {
-    flex: 1,                           // takes all remaining height
-    justifyContent: 'center',          // vertically centers the text
-    alignItems: 'center',              // horizontally centers the text
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: Spacing.xs,
   },
   
@@ -339,7 +339,6 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.white,
     textAlign: 'center',
-    // No margin needed – centering is handled by the wrapper
   },
 
   // Cards
