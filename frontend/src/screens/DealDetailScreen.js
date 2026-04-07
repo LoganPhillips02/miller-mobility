@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
   heroImage:           { width: '100%', height: '100%' },
   heroPlaceholder:     { flex: 1, alignItems: 'center', justifyContent: 'center' },
   heroIcon:            { fontSize: 64 },
+  
   badge:               { position: 'absolute', bottom: Spacing.md, left: Spacing.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs, borderRadius: Radius.full },
   badgeText:           { color: Colors.white, fontSize: Typography.sizes.sm, fontWeight: Typography.weights.bold },
   body:                { paddingVertical: Spacing.base, paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
@@ -132,15 +133,19 @@ const styles = StyleSheet.create({
   expiryBanner:        { backgroundColor: '#FFF3CD', borderRadius: Radius.md, padding: Spacing.sm, marginBottom: Spacing.md },
   expiryText:          { fontSize: Typography.sizes.sm, color: '#856404', fontWeight: Typography.weights.semibold },
   description:         { fontSize: Typography.sizes.base, color: Colors.gray600, lineHeight: Typography.sizes.base * 1.7, marginBottom: Spacing.base },
+  
   infoRow:             { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
   infoLabel:           { fontSize: Typography.sizes.base, color: Colors.gray600 },
   infoValue:           { fontSize: Typography.sizes.base, fontWeight: Typography.weights.bold, color: Colors.black },
+  
   promoCard:           { backgroundColor: Colors.primary, borderRadius: Radius.lg, padding: Spacing.lg, alignItems: 'center', marginVertical: Spacing.base },
   promoCardLabel:      { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.bold, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.sm },
   promoCardCode:       { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.white, letterSpacing: 3, marginBottom: Spacing.xs },
   promoCardNote:       { fontSize: Typography.sizes.xs, color: 'rgba(255,255,255,0.7)' },
+  
   viewProductsButton:  { padding: Spacing.base, alignItems: 'center' },
   viewProductsText:    { fontSize: Typography.sizes.base, fontWeight: Typography.weights.semibold, color: Colors.primary },
+  
   ctaBar:              { flexDirection: 'row', padding: Spacing.base, paddingBottom: Spacing.lg, backgroundColor: Colors.surface, borderTopWidth: 1, borderTopColor: Colors.border, gap: Spacing.md },
   backButton:          { paddingVertical: Spacing.md, paddingHorizontal: Spacing.md, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.gray200 },
   backButtonText:      { fontSize: Typography.sizes.base, fontWeight: Typography.weights.bold, color: Colors.gray600 },

@@ -790,13 +790,20 @@ PRODUCTS = [
 # ---------------------------------------------------------------------------
 # DEALS
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 DEALS = [
     {
-        "title": "March Deal — 10% Off All Electric Wheelchairs",
-        "slug": "march-electric-wheelchair-sale",
+        "title": "April Deal of the Month — 10% Off Rollators",
+        "slug": "april-deal-rollators",
         "deal_type": "seasonal",
-        "short_description": "Save 10% on all new electric power wheelchairs this month only.",
-        "description": "Spring is here and so is our March promotion! Take 10% off any new electric wheelchair in stock. Offer valid through the end of March.",
+        "short_description": "Save 10% on all rollators this month — 3-wheel, 4-wheel, bariatric & upright models included.",
+        "description": (
+            "Spring is here and so is our April Deal of the Month! Take 10% off all rollators for a limited time. "
+            "Rollators—also called rolling walkers—are one of the most effective mobility aids for staying active, "
+            "steady, and independent. They combine stability, comfort, and ease of movement in a way traditional "
+            "walkers simply can't. Whether you're shopping for yourself or a loved one, we're here to help you "
+            "find the right fit."
+        ),
         "discount_percent": 10,
         "badge_label": "10% OFF",
         "badge_color": "#E63946",
@@ -807,34 +814,67 @@ DEALS = [
         "title": "Veterans Appreciation Savings",
         "slug": "veterans-appreciation-savings",
         "deal_type": "seasonal",
-        "short_description": "Special discounts for U.S. military veterans on select mobility products year-round.",
-        "description": "Miller Mobility is proud to honor the men and women who have served our country. Active military and veterans receive special savings on select mobility products year-round. Call or visit our showroom to learn about current veteran pricing.",
+        "short_description": "Veterans receive 10% off their first purchase and 5% off every future purchase — year-round.",
+        "description": (
+            "Miller Mobility is proud to honor those who've served. Veterans receive 10% off their first purchase "
+            "and 5% off every future purchase — our way of saying thank you for your service.\n\n"
+            "Plus, you'll automatically earn Miller Money with every purchase — our exclusive rewards program that "
+            "lets you save even more on mobility products and accessories.\n\n"
+            "Stop by our showroom today to find the perfect fit and start earning Miller Money!"
+        ),
+        "discount_percent": 10,
         "badge_label": "Veteran Savings",
         "badge_color": "#003366",
         "is_featured": True,
         "is_active": True,
     },
     {
-        "title": "ADRC Vehicle Modification Program — Funding Available",
+        "title": "ADRC Vehicle Modification Program — Funding Is Back",
         "slug": "adrc-vehicle-modification",
         "deal_type": "financing",
         "short_description": "Waukesha County residents may qualify for ADRC funding toward vehicle lifts and modifications.",
-        "description": "Miller Mobility is a preferred provider for the ADRC Vehicle Modification Program. Qualified Waukesha County residents may receive funding to help cover vehicle lifts, hand controls, and other adaptive equipment. Ask our team if you qualify.",
+        "description": (
+            "ADRC vehicle lift funding is back for Waukesha County residents! Miller Mobility is a preferred "
+            "provider for the ADRC Vehicle Modification Program. Qualified Waukesha County residents may receive "
+            "funding to help cover the cost of vehicle lifts, hand controls, and other adaptive equipment.\n\n"
+            "Our team handles the estimate and paperwork — you pay only 10% of the final modification cost. "
+            "Funding is limited, so don't wait."
+        ),
         "badge_label": "ADRC Funding",
         "badge_color": "#16A34A",
-        "is_featured": False,
+        "is_featured": True,
         "is_active": True,
     },
     {
         "title": "Flexible Financing — 0% APR Options Available",
         "slug": "flexible-financing",
         "deal_type": "financing",
-        "short_description": "Ask about our 0% APR financing options for qualified buyers.",
-        "description": "We believe everyone deserves access to the mobility equipment they need. Miller Mobility offers flexible financing including 0% APR plans for qualified buyers.",
+        "short_description": "Ask about 0% APR financing options for qualified buyers on select mobility products.",
+        "description": (
+            "We believe everyone deserves access to the mobility equipment they need. Miller Mobility offers "
+            "flexible financing including 0% APR plans for qualified buyers.\n\n"
+            "Need to make payments? We now offer 4 equal monthly payments for a $25.00 service fee!\n\n"
+            "Ask our team about financing when you visit our Oconomowoc showroom or give us a call."
+        ),
         "financing_apr": 0,
         "badge_label": "0% APR",
         "badge_color": "#003366",
         "is_featured": True,
+        "is_active": True,
+    },
+    {
+        "title": "Miller Money — Earn Rewards on Every Purchase",
+        "slug": "miller-money-rewards",
+        "deal_type": "bundle",
+        "short_description": "Earn Miller Money with every purchase and redeem it for savings on future mobility products.",
+        "description": (
+            "Miller Money is our exclusive rewards program that lets you earn credit toward future purchases "
+            "every time you shop at Miller Mobility. The more you buy, the more you save.\n\n"
+            "Ask a team member how to get started — it's automatic with every purchase!"
+        ),
+        "badge_label": "Rewards",
+        "badge_color": "#D97706",
+        "is_featured": False,
         "is_active": True,
     },
 ]

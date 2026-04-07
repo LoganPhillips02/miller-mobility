@@ -252,179 +252,46 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: Colors.background },
   scroll: { flex: 1 },
 
   // Promo banners – inside WebContentGutter, with added paddingTop and paddingHorizontal
-  bannerRow: {
-    flexDirection: IS_MOBILE ? 'column' : 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.md,
-    paddingTop: Spacing.md,          // slight space above
-    paddingHorizontal: Spacing.sm,   // slight space on left/right
-    marginBottom: Spacing.lg,
-  },
-  bannerWrapper: {
-    flex: IS_MOBILE ? undefined : 1,
-    width: IS_MOBILE ? '100%' : undefined,
-    maxWidth: IS_MOBILE ? 500 : 600,
-    alignSelf: 'center',
-  },
-  bannerBackground: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
-    ...Shadows.md,
-    // Increased height to accommodate "contain" without cropping
-    height: IS_MOBILE ? 250 : 400,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  promoBanner: {
-    width: '100%',
-    height: '100%',
-    // resizeMode set inline to "contain" (see JSX)
-  },
+  bannerRow: { flexDirection: IS_MOBILE ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md, paddingTop: Spacing.md, paddingHorizontal: Spacing.sm, marginBottom: Spacing.lg },
+  bannerWrapper: { flex: IS_MOBILE ? undefined : 1, width: IS_MOBILE ? '100%' : undefined, maxWidth: IS_MOBILE ? 500 : 600, alignSelf: 'center' },
+  bannerBackground: { backgroundColor: '#F5F5F5', borderRadius: Radius.lg, overflow: 'hidden', ...Shadows.md, height: IS_MOBILE ? 250 : 400, justifyContent: 'center', alignItems: 'center' },
+  promoBanner: { width: '100%', height: '100%' },
 
   // Sections
-  section:        { 
-    marginTop: Spacing.xl, 
-    paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base 
-  },
-  horizontalList: { 
-    paddingRight: Spacing.base 
-  },
+  section: { marginTop: Spacing.xl, paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
+  horizontalList: { paddingRight: Spacing.base },
 
   // Category chips
-  categoryCard: {
-    width: HOME_CAT_IMG_SIZE,
-    height: HOME_CAT_IMG_SIZE + (IS_MOBILE? 50 : 60),
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
-    marginRight: Spacing.sm,
-    alignItems: 'center',
-    ...Shadows.sm,
-  },
-  
-  categoryImageFrame: {
-    width: '100%',
-    height: HOME_CAT_IMG_SIZE,
-    backgroundColor: Colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  
-  categoryImage: {
-    width: '100%',
-    height: '100%',
-  },
-  
-  categoryPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: Colors.gray50,
-  },
-  
-  categoryTextWrapper: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xs,
-  },
-  
-  categoryCardName: {
-    fontSize: IS_MOBILE? 16 : 20,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.white,
-    textAlign: 'center',
-  },
+  categoryCard: { width: HOME_CAT_IMG_SIZE, height: HOME_CAT_IMG_SIZE + (IS_MOBILE ? 50 : 60), backgroundColor: Colors.primary, borderRadius: Radius.lg, overflow: 'hidden', marginRight: Spacing.sm, alignItems: 'center', ...Shadows.sm },
+  categoryImageFrame: { width: '100%', height: HOME_CAT_IMG_SIZE, backgroundColor: Colors.white, justifyContent: 'center', alignItems: 'center' },
+  categoryImage: { width: '100%', height: '100%' },
+  categoryPlaceholder: { width: '100%', height: '100%', backgroundColor: Colors.gray50 },
+  categoryTextWrapper: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.xs },
+  categoryCardName: { fontSize: IS_MOBILE ? 16 : 20, fontWeight: Typography.weights.semibold, color: Colors.white, textAlign: 'center' },
 
   // Cards
-  productCard: { 
-    width: 200, 
-    marginRight: Spacing.md 
-  },
-  dealCard:    { 
-    width: 260, 
-    marginRight: Spacing.md 
-  },
+  productCard: { width: 200, marginRight: Spacing.md },
+  dealCard: { width: 260, marginRight: Spacing.md },
 
   // Why card
-  whyCard:           { 
-    backgroundColor: Colors.primary, 
-    borderRadius: Radius.xl, 
-    padding: Spacing.lg, 
-    marginBottom: Spacing.lg 
-  },
-  whyTitle:          { 
-    fontSize: Typography.sizes.lg, 
-    fontWeight: Typography.weights.heavy, 
-    color: Colors.white, 
-    marginBottom: Spacing.md 
-  },
-  whyRow:            { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginBottom: Spacing.sm, 
-    gap: Spacing.md 
-  },
-  whyIcon:           { 
-    fontSize: 20 
-  },
-  whyText:           { 
-    fontSize: Typography.sizes.base, 
-    color: 'rgba(255,255,255,0.85)', 
-    flex: 1 
-  },
-  contactButton:     { 
-    marginTop: Spacing.md, 
-    backgroundColor: 'rgba(255,255,255,0.15)', 
-    paddingVertical: Spacing.sm, 
-    paddingHorizontal: Spacing.lg, 
-    borderRadius: Radius.full, 
-    alignSelf: 'flex-start' 
-  },
-  contactButtonText: { 
-    color: Colors.white, 
-    fontWeight: Typography.weights.bold, 
-    fontSize: Typography.sizes.sm 
-  },
+  whyCard: { backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg, marginBottom: Spacing.lg },
+  whyTitle: { fontSize: Typography.sizes.lg, fontWeight: Typography.weights.heavy, color: Colors.white, marginBottom: Spacing.md },
+  whyRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm, gap: Spacing.md },
+  whyIcon: { fontSize: 20 },
+  whyText: { fontSize: Typography.sizes.base, color: 'rgba(255,255,255,0.85)', flex: 1 },
+  contactButton: { marginTop: Spacing.md, backgroundColor: 'rgba(255,255,255,0.15)', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.full, alignSelf: 'flex-start' },
+  contactButtonText: { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm },
 
   // Rentals strip
-  rentalsStrip:      { 
-    backgroundColor: Colors.gray50, 
-    borderRadius: Radius.xl, 
-    padding: Spacing.lg, 
-    borderWidth: 1.5, 
-    borderColor: Colors.border, 
-    marginBottom: Spacing.lg 
-  },
-  rentalsTitle:      { 
-    fontSize: Typography.sizes.md, 
-    fontWeight: Typography.weights.bold, 
-    color: Colors.black, 
-    marginBottom: Spacing.sm 
-  },
-  rentalsText:       { 
-    fontSize: Typography.sizes.sm, 
-    color: Colors.gray600, 
-    lineHeight: Typography.sizes.sm * 1.6,
-    marginBottom: Spacing.md 
-  },
-  rentalsButton:     { 
-    backgroundColor: Colors.primary, 
-    paddingVertical: Spacing.sm, 
-    paddingHorizontal: Spacing.lg, 
-    borderRadius: Radius.full, 
-    alignSelf: 'flex-start' 
-  },
-  rentalsButtonText: { 
-    color: Colors.white, 
-    fontWeight: Typography.weights.bold, 
-    fontSize: Typography.sizes.sm 
-  },
+  rentalsStrip: { backgroundColor: Colors.gray50, borderRadius: Radius.xl, padding: Spacing.lg, borderWidth: 1.5, borderColor: Colors.border, marginBottom: Spacing.lg },
+  rentalsTitle: { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.black, marginBottom: Spacing.sm },
+  rentalsText: { fontSize: Typography.sizes.sm, color: Colors.gray600, lineHeight: Typography.sizes.sm * 1.6, marginBottom: Spacing.md },
+  rentalsButton: { backgroundColor: Colors.primary, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.full, alignSelf: 'flex-start' },
+  rentalsButtonText: { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm },
 });
 
 export default HomeScreen;

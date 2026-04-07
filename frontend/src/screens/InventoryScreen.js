@@ -349,145 +349,37 @@ const InventoryScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
 
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  backChip: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs + 1,
-    borderRadius: Radius.full,
-  },
-  backChipText: {
-    color: Colors.white,
-    fontSize: Typography.sizes.sm,
-    fontWeight: Typography.weights.bold,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: Typography.sizes.base,
-    color: Colors.black,
-    paddingVertical: Spacing.sm,
-  },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: Spacing.sm },
+  backChip: { backgroundColor: Colors.primary, paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs + 1, borderRadius: Radius.full },
+  backChipText: { color: Colors.white, fontSize: Typography.sizes.sm, fontWeight: Typography.weights.bold },
+  searchInput: { flex: 1, fontSize: Typography.sizes.base, color: Colors.black, paddingVertical: Spacing.sm },
   clearBtn: { fontSize: 16, color: Colors.gray400, paddingHorizontal: Spacing.sm },
 
-  suggestions: {
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  suggestionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.sm,
-    gap: Spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-  },
+  suggestions: { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  suggestionRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, gap: Spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
   suggestionIcon: { fontSize: 14 },
   suggestionText: { flex: 1, fontSize: Typography.sizes.base, color: Colors.black },
   suggestionRemove: { fontSize: 12, color: Colors.gray400 },
 
-  breadcrumb: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.primaryDark ?? Colors.primary,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.sm,
-  },
-  breadcrumbText: {
-    fontSize: Typography.sizes.sm,
-    fontWeight: Typography.weights.bold,
-    color: Colors.white,
-    flex: 1,
-  },
-  breadcrumbCount: {
-    fontSize: Typography.sizes.xs,
-    color: 'rgba(255,255,255,0.65)',
-    marginLeft: Spacing.sm,
-  },
+  breadcrumb: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.primaryDark ?? Colors.primary, paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm },
+  breadcrumbText: { fontSize: Typography.sizes.sm, fontWeight: Typography.weights.bold, color: Colors.white, flex: 1 },
+  breadcrumbCount: { fontSize: Typography.sizes.xs, color: 'rgba(255,255,255,0.65)', marginLeft: Spacing.sm },
 
-  categoryGridHeader: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.xl,
-  },
-  categoryGridTitle: {
-    fontSize: Typography.sizes['2xl'],
-    fontWeight: Typography.weights.heavy,
-    color: Colors.white,
-    marginBottom: Spacing.xs,
-  },
-  categoryGridSub: {
-    fontSize: Typography.sizes.sm,
-    color: 'rgba(255,255,255,0.7)',
-  },
-  categoryGrid: {
-    padding: Spacing.md,
-  },
-  categoryGridRow: {
-    justifyContent: 'flex-start',
-    marginBottom: Spacing.sm,
-    gap: CARD_GAP,
-  },
+  categoryGridHeader: { backgroundColor: Colors.primary, paddingHorizontal: Spacing.base, paddingTop: Spacing.lg, paddingBottom: Spacing.xl },
+  categoryGridTitle: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.white, marginBottom: Spacing.xs },
+  categoryGridSub: { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.7)' },
+  categoryGrid: { padding: Spacing.md },
+  categoryGridRow: { justifyContent: 'flex-start', marginBottom: Spacing.sm, gap: CARD_GAP },
 
-  categoryCard: {
-    width: CARD_WIDTH,
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
-    shadowColor: Colors.black,
-    shadowOpacity: 0.8,
-    shadowRadius: Radius.lg,
-    borderWidth: IS_MOBILE ? 2 : 5,
-    borderColor: Colors.border,
-  },
-  categoryImageFrame: {
-    width: CAT_IMG_SIZE,
-    height: CAT_IMG_SIZE,
-    backgroundColor: Colors.white,
-  },
-  categoryImage: {
-    width: CAT_IMG_SIZE,
-    height: CAT_IMG_SIZE,
-  },
-  categoryPlaceholder: {
-    width: CAT_IMG_SIZE,
-    height: CAT_IMG_SIZE,
-    backgroundColor: Colors.gray50,
-  },
-  categoryCardName: {
-    fontSize: IS_MOBILE ? Typography.sizes.lg : Typography.sizes.xl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.white,
-    textAlign: 'center',
-    marginTop: Spacing.md,
-    marginBottom: Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
+  categoryCard: { width: CARD_WIDTH, backgroundColor: Colors.primary, borderRadius: Radius.lg, overflow: 'hidden', shadowColor: Colors.black, shadowOpacity: 0.8, shadowRadius: Radius.lg, borderWidth: IS_MOBILE ? 2 : 5, borderColor: Colors.border },
+  categoryImageFrame: { width: CAT_IMG_SIZE, height: CAT_IMG_SIZE, backgroundColor: Colors.white },
+  categoryImage: { width: CAT_IMG_SIZE, height: CAT_IMG_SIZE },
+  categoryPlaceholder: { width: CAT_IMG_SIZE, height: CAT_IMG_SIZE, backgroundColor: Colors.gray50 },
+  categoryCardName: { fontSize: IS_MOBILE ? Typography.sizes.lg : Typography.sizes.xl, fontWeight: Typography.weights.bold, color: Colors.white, textAlign: 'center', marginTop: Spacing.md, marginBottom: Spacing.md, paddingHorizontal: Spacing.md },
 
-  productGrid: {
-    padding: Spacing.sm,
-    paddingBottom: Spacing.base,
-  },
-  productRow: {
-    justifyContent: 'flex-start',
-    marginBottom: Spacing.sm,
-    gap: CARD_GAP,
-  },
-  productCard: {
-    width: CARD_WIDTH,
-  },
+  productGrid: { padding: Spacing.sm, paddingBottom: Spacing.base },
+  productRow: { justifyContent: 'flex-start', marginBottom: Spacing.sm, gap: CARD_GAP },
+  productCard: { width: CARD_WIDTH },
 });
 
 export default InventoryScreen;

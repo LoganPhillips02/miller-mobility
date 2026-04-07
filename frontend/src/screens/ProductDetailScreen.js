@@ -178,24 +178,30 @@ const styles = StyleSheet.create({
   image:            { width: SCREEN_WIDTH, height: 280 },
   imagePlaceholder: { height: 280, backgroundColor: Colors.gray50, alignItems: 'center', justifyContent: 'center' },
   imageDots:        { position: 'absolute', bottom: Spacing.sm, width: '100%', flexDirection: 'row', justifyContent: 'center', gap: Spacing.xs },
+  
   dot:              { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.5)' },
   dotActive:        { backgroundColor: Colors.white },
+  
   body:             { paddingVertical: Spacing.base, paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
   badgeRow:         { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm },
   name:             { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.black, marginBottom: Spacing.xs },
   price:            { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.primary, marginBottom: Spacing.sm },
   shortDesc:        { fontSize: Typography.sizes.base, color: Colors.gray600, lineHeight: Typography.sizes.base * 1.6, marginBottom: Spacing.md },
   sectionTitle:     { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.black, marginBottom: Spacing.sm },
+  
   specsCard:        { borderRadius: Radius.lg, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden', marginBottom: Spacing.base },
   specRow:          { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm + 2, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
   specLabel:        { fontSize: Typography.sizes.sm, color: Colors.gray600, flex: 1 },
   specValue:        { fontSize: Typography.sizes.sm, fontWeight: Typography.weights.semibold, color: Colors.black, textAlign: 'right', flex: 1 },
+  
   description:      { fontSize: Typography.sizes.base, color: Colors.gray600, lineHeight: Typography.sizes.base * 1.7, marginBottom: Spacing.base },
   metaRow:          { flexDirection: 'row', gap: Spacing.lg },
   meta:             { fontSize: Typography.sizes.sm, color: Colors.gray400 },
   ctaBar:           { flexDirection: 'row', padding: Spacing.base, paddingBottom: Spacing.lg, backgroundColor: Colors.surface, borderTopWidth: 1, borderTopColor: Colors.border, gap: Spacing.md },
+  
   backButton:       { paddingVertical: Spacing.md, paddingHorizontal: Spacing.md, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.gray200 },
   backButtonText:   { fontSize: Typography.sizes.base, fontWeight: Typography.weights.bold, color: Colors.gray600 },
+  
   emailButton:      { flex: 1, paddingVertical: Spacing.md, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.primary },
   emailButtonText:  { fontSize: Typography.sizes.base, fontWeight: Typography.weights.bold, color: Colors.primary },
   callButton:       { flex: 2 },

@@ -215,7 +215,7 @@ const RentalsScreen = () => {
 const styles = StyleSheet.create({
   safe:               { flex: 1, backgroundColor: Colors.background },
 
-  // Hero
+  // ─── Hero ───
   hero:               { backgroundColor: Colors.primary, padding: Spacing.xl, paddingTop: Spacing['2xl'] },
   heroTag:            { fontSize: Typography.sizes.xs, fontWeight: Typography.weights.bold, color: 'rgba(255,255,255,0.6)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: Spacing.sm },
   heroTitle:          { fontSize: Typography.sizes['3xl'], fontWeight: Typography.weights.heavy, color: Colors.white, marginBottom: Spacing.sm },
@@ -223,17 +223,17 @@ const styles = StyleSheet.create({
   heroButton:         { backgroundColor: Colors.white, paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl, borderRadius: Radius.full, alignSelf: 'flex-start' },
   heroButtonText:     { color: Colors.primary, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.base },
 
-  // Rental period row
+  // ─── Rental period row ───
   periodRow:          { flexDirection: 'row', justifyContent: 'center', gap: Spacing.md, paddingVertical: Spacing.lg, backgroundColor: Colors.primaryLight },
   periodBadge:        { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: Radius.full, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
   periodText:         { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm, letterSpacing: 0.5 },
 
-  // Section
+  // ─── Section ───
   section:            { paddingBottom: Spacing.base, paddingTop: Spacing.xl, paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
   sectionTitle:       { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.black, marginBottom: Spacing.xs },
   sectionSub:         { fontSize: Typography.sizes.sm, color: Colors.gray400, marginBottom: Spacing.lg },
 
-  // Card
+  // ─── Card ───
   card:               { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.base, marginBottom: Spacing.md, ...Shadows.sm, borderWidth: 1, borderColor: Colors.border },
   cardHeader:         { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.md },
   cardIcon:           { fontSize: 32, marginTop: 2 },
@@ -242,25 +242,25 @@ const styles = StyleSheet.create({
   cardDesc:           { fontSize: Typography.sizes.sm, color: Colors.gray600, lineHeight: Typography.sizes.sm * 1.55 },
   chevron:            { fontSize: 12, color: Colors.gray400, marginTop: 6 },
 
-  // Bullet list (expanded)
+  // ─── Bullet list (expanded) ───
   bulletList:         { marginTop: Spacing.md, paddingTop: Spacing.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Colors.border },
   bulletRow:          { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm },
   bullet:             { color: Colors.success, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm, width: 18 },
   bulletText:         { flex: 1, fontSize: Typography.sizes.sm, color: Colors.gray600, lineHeight: Typography.sizes.sm * 1.5 },
 
-  // Installation callout
+  // ─── Installation callout ───
   installBlock:       { marginVertical: Spacing.base, marginHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base, backgroundColor: Colors.gray50, borderRadius: Radius.xl, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border },
   installTitle:       { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.black, marginBottom: Spacing.sm },
   installText:        { fontSize: Typography.sizes.sm, color: Colors.gray600, lineHeight: Typography.sizes.sm * 1.6 },
 
-  // Programs callout
+  // ─── Programs callout ───
   programsBlock:      { marginHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base, backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg, marginBottom: Spacing.base },
   programsTitle:      { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.white, marginBottom: Spacing.sm },
   programsText:       { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.8)', lineHeight: Typography.sizes.sm * 1.6, marginBottom: Spacing.md },
   programsButton:     { backgroundColor: 'rgba(255,255,255,0.15)', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.full, alignSelf: 'flex-start' },
   programsButtonText: { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm },
 
-  // CTA
+  // ─── CTA ───
   ctaBlock:           { marginTop: 0, marginBottom: Spacing.base, marginHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
   ctaTitle:           { fontSize: Typography.sizes.xl, fontWeight: Typography.weights.heavy, color: Colors.black, marginBottom: Spacing.sm },
   ctaText:            { fontSize: Typography.sizes.sm, color: Colors.gray600, lineHeight: Typography.sizes.sm * 1.6, marginBottom: Spacing.md },

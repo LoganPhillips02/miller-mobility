@@ -134,8 +134,6 @@ const ADRCTab = () => (
 );
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
-// ADRC is intentionally omitted from the visible tab bar — it is only accessible
-// via the homepage banner. It still lives as a tab slot so switchTab('ADRC') works.
 const TABS = [
   { key: 'Inventory', icon: require('../../assets/navbar/mobility-scooter.png'), label: 'Products' },
   { key: 'Deals',     icon: require('../../assets/navbar/deals.png'),            label: 'Deals'    },
@@ -165,7 +163,7 @@ const TopNavBar = ({ activeTab, onTabPress, scrollY }) => {
   return (
     <View style={styles.navBar}>
 
-      {/* ── Brand strip ── */}
+      {/* Brand strip */}
       <Animated.View
         style={[
           styles.brandStrip,
@@ -184,11 +182,13 @@ const TopNavBar = ({ activeTab, onTabPress, scrollY }) => {
         {/* Center: Phone */}
         <View style={styles.brandCenter}>
           <TouchableOpacity onPress={() => Linking.openURL('tel:+12625494900')} activeOpacity={0.7} style={styles.phoneRow}>
-            <Image
-              source={require('../../assets/navbar/red-phone.png')}
-              style={styles.phoneIcon}
-              resizeMode="contain"
-            />
+            {!IS_MOBILE && (
+              <Image
+                source={require('../../assets/navbar/red-phone.png')}
+                style={styles.phoneIcon}
+                resizeMode="contain"
+              />
+            )}
             <Text style={styles.phoneBarText}>262-549-4900</Text>
           </TouchableOpacity>
           {!IS_MOBILE && (
@@ -213,7 +213,7 @@ const TopNavBar = ({ activeTab, onTabPress, scrollY }) => {
         )}
       </Animated.View>
 
-      {/* ── Tab row — only shows the 5 main tabs, not ADRC ── */}
+      {/* Tab row — only shows the 5 main tabs, not ADRC */}
       <View style={styles.tabRow}>
         {Platform.OS === 'web' && !IS_MOBILE ? (
           <View style={styles.tabRowDesktopOuter}>
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
 
-  // ── Outer nav wrapper ──
+  // ─── Outer nav wrapper ───
   navBar: {
     backgroundColor: Colors.primary,
     shadowColor: '#000',
@@ -361,18 +361,17 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
 
-  // ── Brand strip ──
+  // ─── Brand strip ───
   brandStrip: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
-    // Increased side padding for space on left/right edges
     paddingHorizontal: IS_MOBILE ? 10 : 50,
     paddingVertical: Spacing.xs,
     gap: Spacing.xs,
   },
   brandLeft: {
-    flex: 1,               // equal to center & right → keeps phone centered
+    flex: 1,
     alignItems: 'flex-start',
     justifyContent: 'center',
   },
@@ -398,46 +397,47 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.xs,
   },
-  phoneIcon: {
-    width:  IS_MOBILE ? 18 : 35,
-    height: IS_MOBILE ? 18 : 35,
-  },
   phoneBarText: {
-    fontSize: IS_MOBILE ? 18 : 35,
+    fontSize: IS_MOBILE ? 19 : 35,
     fontWeight: Typography.weights.heavy,
     color: Colors.error,
     textAlign: 'center',
   },
+  // ─── Displayed on desktop only ───
+  phoneIcon: {
+    width:  35,
+    height: 35,
+  },
   phoneSubText: {
-    fontSize: IS_MOBILE ? 8 : 20,
+    fontSize: 20,
     fontWeight: Typography.weights.medium,
     color: Colors.primary,
     textAlign: 'center',
     marginTop: 1,
   },
   hoursText: {
-    fontSize: IS_MOBILE ? 8 : Typography.sizes.lg,
+    fontSize: Typography.sizes.lg,
     fontWeight: Typography.weights.bold,
     color: Colors.error,
     textAlign: 'right',
   },
   addressText: {
-    fontSize: IS_MOBILE ? 8 : Typography.sizes.lg,
+    fontSize: Typography.sizes.lg,
     color: Colors.gray600,
     textAlign: 'right',
-    lineHeight: IS_MOBILE ? 11 : 18,
+    lineHeight: 18,
     marginTop: 5,
   },
   taglineText: {
-    fontSize: IS_MOBILE ? 8 : Typography.sizes.lg,
+    fontSize: Typography.sizes.lg,
     color: Colors.gray600,
     textAlign: 'right',
-    lineHeight: IS_MOBILE ? 11 : 18,
+    lineHeight: 18,
     marginTop: 7,
     fontStyle: 'italic',
   },
 
-  // ── Tab row (unchanged) ──
+  // ─── Tab row ───
   tabRow: {
     flexDirection: 'row',
     backgroundColor: Colors.primary,
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
     color: Colors.white 
   },
 
-  // ── Screen slots ──
+  // ─── Screen slots ───
   screenContainer: {
     flex: 1,
     backgroundColor: Colors.background ?? '#F7F9FC',
