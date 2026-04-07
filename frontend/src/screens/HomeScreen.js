@@ -113,37 +113,41 @@ const HomeScreen = () => {
       >
 
         <WebContentGutter>
-          {/* Promo Banners – now inside WebContentGutter, same width as categories */}
-          <View style={styles.bannerRow}>
-            {/* Deal of the Month */}
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={styles.bannerWrapper}
-              onPress={() => switchTab('Inventory')}
-            >
-              <View style={styles.bannerBackground}>
-                <Image
-                  source={require('../../assets/home/Deal-of-the-month.webp')}
-                  style={styles.promoBanner}
-                  resizeMode="contain"   // full image, no cropping
-                />
-              </View>
-            </TouchableOpacity>
-
-            {/* ADRC banner */}
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={styles.bannerWrapper}
-              onPress={() => switchTab('ADRC')}
-            >
-              <View style={styles.bannerBackground}>
-                <Image
-                  source={require('../../assets/home/ADRC-Vehicle-Lift.png')}
-                  style={styles.promoBanner}
-                  resizeMode="contain"   // full image, no cropping
-                />
-              </View>
-            </TouchableOpacity>
+          {/* Promo banner with background image */}
+          <View style={styles.promoContainer}>
+            <Image
+              source={require('../../assets/home/home-bg.webp')}
+              style={styles.promoBackgroundImage}
+              resizeMode="cover"
+            />
+            <View style={styles.promoOverlay}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={styles.promoItem}
+                onPress={() => switchTab('Inventory')}
+              >
+                <View style={styles.promoImageWrapper}>
+                  <Image
+                    source={require('../../assets/home/Deal-of-the-month.webp')}
+                    style={styles.promoItemImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={styles.promoItem}
+                onPress={() => switchTab('ADRC')}
+              >
+                <View style={styles.promoImageWrapper}>
+                  <Image
+                    source={require('../../assets/home/ADRC-Vehicle-Lift.png')}
+                    style={styles.promoItemImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Categories */}
@@ -255,11 +259,53 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   scroll: { flex: 1 },
 
-  // Promo banners – inside WebContentGutter, with added paddingTop and paddingHorizontal
-  bannerRow: { flexDirection: IS_MOBILE ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md, paddingTop: Spacing.md, paddingHorizontal: Spacing.sm, marginBottom: Spacing.lg },
-  bannerWrapper: { flex: IS_MOBILE ? undefined : 1, width: IS_MOBILE ? '100%' : undefined, maxWidth: IS_MOBILE ? 500 : 600, alignSelf: 'center' },
-  bannerBackground: { backgroundColor: '#F5F5F5', borderRadius: Radius.lg, overflow: 'hidden', ...Shadows.md, height: IS_MOBILE ? 250 : 400, justifyContent: 'center', alignItems: 'center' },
-  promoBanner: { width: '100%', height: '100%' },
+  // Promo container with background image and overlaid promo items
+  promoContainer: {
+    position: 'relative',
+    borderRadius: Radius.lg,
+    overflow: 'hidden',
+    marginBottom: Spacing.lg,
+    marginTop: Spacing.md,
+    marginHorizontal: Spacing.sm,
+    height: IS_MOBILE ? 600 : 575,
+    ...Shadows.md,
+  },
+  promoBackgroundImage: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+  promoOverlay: {
+    flex: 1,
+    flexDirection: IS_MOBILE ? 'column' : 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.md,
+    padding: Spacing.md,
+    zIndex: 1,
+  },
+  promoItem: {
+    flex: IS_MOBILE ? undefined : 1,
+    width: IS_MOBILE ? '100%' : undefined,
+    maxWidth: IS_MOBILE ? 300 : 500,
+    alignSelf: 'center',
+    backgroundColor: 'white',
+    borderRadius: Radius.lg,
+    overflow: 'hidden',
+    ...Shadows.sm,
+    height: IS_MOBILE ? 250 : 400,
+  },
+  promoImageWrapper: {
+    flex: 1,
+    padding: Spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  promoItemImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
 
   // Sections
   section: { marginTop: Spacing.xl, paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
