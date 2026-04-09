@@ -84,44 +84,6 @@ const DEALS = [
     isFeatured: true,
   },
   {
-    id: 'financing',
-    badge: '0% APR',
-    badgeColor: '#003366',
-    dealType: 'FINANCING',
-    title: 'Flexible Financing — 0% APR Options Available',
-    shortDescription:
-      'Ask about 0% APR financing options for qualified buyers on select mobility products.',
-    description:
-      'We believe everyone deserves access to the mobility equipment they need. Miller Mobility offers flexible financing including 0% APR plans for qualified buyers.\n\nNeed to make payments? We now offer 4 equal monthly payments for a $25.00 service fee!\n\nAsk our team about financing when you visit our Oconomowoc showroom or give us a call.',
-    bullets: [
-      '0% APR financing for qualified buyers',
-      '4 equal monthly payments available for a $25 fee',
-      'Apply in-store or over the phone',
-    ],
-    cta: 'Learn More',
-    ctaAction: () => Linking.openURL('https://www.millermobility.com/financing'),
-    isFeatured: false,
-  },
-  {
-    id: 'miller-money',
-    badge: 'REWARDS',
-    badgeColor: '#D97706',
-    dealType: 'LOYALTY PROGRAM',
-    title: 'Miller Money — Earn Rewards on Every Purchase',
-    shortDescription:
-      'Earn Miller Money with every purchase and redeem it for savings on future mobility products.',
-    description:
-      'Miller Money is our exclusive rewards program that lets you earn credit toward future purchases every time you shop at Miller Mobility. The more you buy, the more you save.\n\nAsk a team member how to get started — it\'s automatic with every purchase!',
-    bullets: [
-      'Earn rewards automatically on every purchase',
-      'Redeem toward future mobility products & accessories',
-      'Veterans earn Miller Money on top of their discount',
-    ],
-    cta: 'Learn More',
-    ctaAction: () => Linking.openURL('https://www.millermobility.com/miller-money'),
-    isFeatured: false,
-  },
-  {
     id: 'rentals',
     badge: 'DAILY · WEEKLY · MONTHLY',
     badgeColor: '#475569',

@@ -845,38 +845,6 @@ DEALS = [
         "is_featured": True,
         "is_active": True,
     },
-    {
-        "title": "Flexible Financing — 0% APR Options Available",
-        "slug": "flexible-financing",
-        "deal_type": "financing",
-        "short_description": "Ask about 0% APR financing options for qualified buyers on select mobility products.",
-        "description": (
-            "We believe everyone deserves access to the mobility equipment they need. Miller Mobility offers "
-            "flexible financing including 0% APR plans for qualified buyers.\n\n"
-            "Need to make payments? We now offer 4 equal monthly payments for a $25.00 service fee!\n\n"
-            "Ask our team about financing when you visit our Oconomowoc showroom or give us a call."
-        ),
-        "financing_apr": 0,
-        "badge_label": "0% APR",
-        "badge_color": "#003366",
-        "is_featured": True,
-        "is_active": True,
-    },
-    {
-        "title": "Miller Money — Earn Rewards on Every Purchase",
-        "slug": "miller-money-rewards",
-        "deal_type": "bundle",
-        "short_description": "Earn Miller Money with every purchase and redeem it for savings on future mobility products.",
-        "description": (
-            "Miller Money is our exclusive rewards program that lets you earn credit toward future purchases "
-            "every time you shop at Miller Mobility. The more you buy, the more you save.\n\n"
-            "Ask a team member how to get started — it's automatic with every purchase!"
-        ),
-        "badge_label": "Rewards",
-        "badge_color": "#D97706",
-        "is_featured": False,
-        "is_active": True,
-    },
 ]
 
 
