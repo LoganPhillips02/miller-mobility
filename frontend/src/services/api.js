@@ -1,108 +1,82 @@
-import axios from 'axios';
 import { API_BASE_URL, ENDPOINTS, REQUEST_TIMEOUT } from '../constants/api';
-import {
-  createCategory,
-  createBrand,
-  createProduct,
-  createDeal,
-} from '../models';
 
-// ─── Axios Instance ───────────────────────────────────────────────────────────
-const client = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: REQUEST_TIMEOUT,
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-});
+// ─── Core fetch wrapper ───────────────────────────────────────────────────────
 
-// Request interceptor (add auth token when implemented)
-client.interceptors.request.use(
-  (config) => config,
-  (error) => Promise.reject(error),
-);
+async function apiFetch(path, options = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
-// Response interceptor — normalise errors
-client.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const message =
-      error.response?.data?.detail ||
-      error.response?.data?.message ||
-      error.message ||
-      'An unexpected error occurred.';
-    return Promise.reject(new Error(message));
-  },
-);
+  try {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      headers: { 'Content-Type': 'application/json', ...options.headers },
+      signal: controller.signal,
+      ...options,
+    });
 
-// ─── Generic helpers ──────────────────────────────────────────────────────────
-const get = (url, params = {}) => client.get(url, { params }).then((r) => r.data);
-const post = (url, data) => client.post(url, data).then((r) => r.data);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new ApiError(res.status, body.detail || body.message || 'Request failed', body);
+    }
 
-// ─── Products Service ─────────────────────────────────────────────────────────
-export const productsService = {
-  /**
-   * List products with optional filters.
-   * @param {object} filters - category, condition, status, min_price, max_price, featured, search
-   */
-  list: async (filters = {}) => {
-    const data = await get(ENDPOINTS.PRODUCTS, filters);
-    return {
-      ...data,
-      results: (data.results ?? []).map(createProduct),
-    };
+    return await res.json();
+  } catch (err) {
+    if (err.name === 'AbortError') throw new ApiError(408, 'Request timed out');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export class ApiError extends Error {
+  constructor(status, message, data = {}) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
+// ─── Products ─────────────────────────────────────────────────────────────────
+
+export const productsApi = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ''))
+    ).toString();
+    return apiFetch(`${ENDPOINTS.PRODUCTS}${qs ? `?${qs}` : ''}`);
   },
 
-  detail: async (id) => {
-    const data = await get(ENDPOINTS.PRODUCT_DETAIL(id));
-    return createProduct(data);
-  },
+  get: (id) => apiFetch(ENDPOINTS.PRODUCT_DETAIL(id)),
 
-  featured: async () => {
-    const data = await get(ENDPOINTS.PRODUCTS_FEATURED);
-    return (Array.isArray(data) ? data : data.results ?? []).map(createProduct);
-  },
-
-  vehicles: async (filters = {}) => {
-    const data = await get(ENDPOINTS.PRODUCTS_VEHICLES, filters);
-    return (Array.isArray(data) ? data : data.results ?? []).map(createProduct);
-  },
-
-  categories: async () => {
-    const data = await get(ENDPOINTS.CATEGORIES);
-    return (data.results ?? data).map(createCategory);
-  },
-
-  brands: async () => {
-    const data = await get(ENDPOINTS.BRANDS);
-    return (data.results ?? data).map(createBrand);
-  },
+  featured: () => apiFetch(ENDPOINTS.PRODUCTS_FEATURED),
 };
 
-// ─── Deals Service ────────────────────────────────────────────────────────────
-export const dealsService = {
-  list: async (filters = {}) => {
-    const data = await get(ENDPOINTS.DEALS, filters);
-    return {
-      ...data,
-      results: (data.results ?? []).map(createDeal),
-    };
-  },
+// ─── Categories ───────────────────────────────────────────────────────────────
 
-  active: async () => {
-    const data = await get(ENDPOINTS.DEALS_ACTIVE);
-    return (Array.isArray(data) ? data : data.results ?? []).map(createDeal);
-  },
-
-  detail: async (slug) => {
-    const data = await get(ENDPOINTS.DEAL_DETAIL(slug));
-    return createDeal(data);
-  },
-
-  submitTradeIn: async (payload) => {
-    return post(ENDPOINTS.TRADE_IN, payload);
-  },
+export const categoriesApi = {
+  list: () => apiFetch(ENDPOINTS.CATEGORIES),
 };
 
-export default client;
+// ─── Brands ───────────────────────────────────────────────────────────────────
+
+export const brandsApi = {
+  list: () => apiFetch(ENDPOINTS.BRANDS),
+};
+
+// ─── Deals ────────────────────────────────────────────────────────────────────
+
+export const dealsApi = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiFetch(`${ENDPOINTS.DEALS}${qs ? `?${qs}` : ''}`);
+  },
+  active: () => apiFetch(ENDPOINTS.DEALS_ACTIVE),
+  get: (slug) => apiFetch(ENDPOINTS.DEAL_DETAIL(slug)),
+};
+
+// ─── Contact ──────────────────────────────────────────────────────────────────
+
+export const contactApi = {
+  submit: (data) =>
+    apiFetch(ENDPOINTS.CONTACT, { method: 'POST', body: JSON.stringify(data) }),
+};

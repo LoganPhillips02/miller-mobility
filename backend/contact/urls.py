@@ -5,6 +5,4 @@ from .views import ContactInquiryViewSet
 router = DefaultRouter()
 router.register("inquiries", ContactInquiryViewSet, basename="contact-inquiry")
 
-urlpatterns = [
-    path("", include(router.urls)),
-]
+urlpatterns = [path("", include(router.urls))]

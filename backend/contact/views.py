@@ -5,7 +5,6 @@ from .serializers import ContactInquirySerializer
 
 
 class ContactInquiryViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    """Customers submit contact inquiries; staff manage them in admin."""
     queryset = ContactInquiry.objects.none()
     serializer_class = ContactInquirySerializer
 
@@ -14,9 +13,6 @@ class ContactInquiryViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(
-            {
-                "message": "Thanks for reaching out! We'll get back to you within 1 business day.",
-                "id": serializer.data["id"],
-            },
+            {"message": "Thanks for reaching out! We'll get back to you within 1 business day.", "id": serializer.data["id"]},
             status=status.HTTP_201_CREATED,
         )

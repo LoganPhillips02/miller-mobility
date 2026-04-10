@@ -1,343 +1,271 @@
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import {
-  View,
-  Text,
-  Animated,
-  FlatList,
-  TouchableOpacity,
-  Pressable,
-  StyleSheet,
-  SafeAreaView,
-  StatusBar,
-  Image,
-  Dimensions,
-  Platform,
+  View, Text, ScrollView, TouchableOpacity, Image,
+  StyleSheet, RefreshControl, ActivityIndicator, Dimensions,
 } from 'react-native';
-import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
-import { useFeaturedProducts, useCategories } from '../hooks/useProducts';
-import { useDeals } from '../hooks/useDeals';
-import ProductCard from '../components/ProductCard';
-import DealCard from '../components/DealCard';
-import SiteFooter from '../components/SiteFooter';
-import { SectionHeader, LoadingSpinner } from '../components/ui';
-import { useTabNavigation } from '../navigation/TabNavigationContext';
-import { WEB_LAYOUT_BREAKPOINT } from '../constants/webLayout';
-import WebContentGutter from '../components/WebContentGutter';
+import { useFeaturedProducts, useCategories, useActiveDeals } from '../hooks/useApi';
+import { normalizeProduct, normalizeCategory, normalizeDeal, getProductImageUrl } from '../models/product';
+import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const IS_MOBILE = SCREEN_WIDTH < 768;
-const IS_WEB_DESKTOP = Platform.OS === 'web' && SCREEN_WIDTH >= WEB_LAYOUT_BREAKPOINT;
-const HOME_CAT_IMG_SIZE = IS_MOBILE ? 120 : 160;
-const CARD_HEIGHT = HOME_CAT_IMG_SIZE + 50;
+const CARD_WIDTH = (SCREEN_WIDTH - SPACING.lg * 3) / 2;
 
-const CATEGORY_IMAGES = {
-  'stairlifts': require('../../assets/products/stairLifts/s-lift-sre3050.jpg'),
-  'mobility-scooters': require('../../assets/products/scooters/m-scooter-sc15.webp'),
-  'power-wheelchairs': require('../../assets/products/powerChairs/pw-chair-j27x.jpg'),
-  'lift-chairs-power-recliners': require('../../assets/products/recliners/rec-pr764.webp'),
-  'wheelchairs-transport-chairs': require('../../assets/products/wheelchairs/w-chair-ak2.webp'),
-  'walkers-rollators': require('../../assets/products/walkers/walker-rrd.png'),
-  'vehicle-lifts': require('../../assets/products/vehicleLifts/car-lift-asl275.jpg'),
-  'patient-lifts': require('../../assets/products/patientLifts/p-lift-sa400.png'),
-  'ramps': require('../../assets/products/ramps/ramp.png'),
-  'beds':require('../../assets/products/beds/beds.jpg'),
-  'vertical-platform-lifts':require('../../assets/products/platformLifts/platform-lift.png'),
-  'security-poles':require('../../assets/products/poles/pole-bsb.png'),
-  'tables-trays':require('../../assets/products/tables/tables.png'),
-};
+export default function HomeScreen({ navigation }) {
+  const { products: rawProducts, loading: pLoading, refetch: refetchProducts } = useFeaturedProducts();
+  const { categories: rawCats,   loading: cLoading, refetch: refetchCats }     = useCategories();
+  const { deals: rawDeals,       loading: dLoading, refetch: refetchDeals }     = useActiveDeals();
 
-const resolveCategoryImageSource = (src) => {
-  if (src == null) return null;
-  if (typeof src === 'number') return src;
-  if (typeof src === 'string') return { uri: src };
-  if (typeof src === 'object' && typeof src.uri === 'string') return src;
-  return null;
-};
+  const loading = pLoading && cLoading && dLoading;
 
-// ─── Category card ────────────────────────────────────────────────────────────
-const CategoryCard = ({ category, onPress }) => {
-  const imageSource = CATEGORY_IMAGES[category.slug];
-  const [imgError, setImgError] = useState(false);
-  const imageResolvedSource = resolveCategoryImageSource(imageSource);
-  const showImage = imageResolvedSource != null && !imgError;
+  const products   = rawProducts.map(normalizeProduct);
+  const categories = rawCats.map(normalizeCategory);
+  const deals      = rawDeals.map(normalizeDeal);
+
+  const onRefresh = useCallback(() => {
+    refetchProducts(); refetchCats(); refetchDeals();
+  }, [refetchProducts, refetchCats, refetchDeals]);
+
+  const heroDeal = deals.find(d => d.isFeatured) ?? deals[0];
 
   return (
-    <Pressable
-      style={({ pressed, hovered }) => [
-        styles.categoryCard,
-        { opacity: pressed ? 0.7 : hovered ? 0.8 : 1 }
-      ]}
-      onPress={() => onPress(category)}
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} tintColor={COLORS.primary} />}
     >
-      <View style={styles.categoryImageFrame}>
-        {showImage ? (
-          <Image
-            source={imageResolvedSource}
-            style={styles.categoryImage}
-            resizeMode="contain"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <View style={styles.categoryPlaceholder} />
-        )}
-      </View>
-
-      {/* Text wrapper – fills remaining space and centers content */}
-      <View style={styles.categoryTextWrapper}>
-        <Text style={styles.categoryCardName} numberOfLines={2}>
-          {category.name}
-        </Text>
-      </View>
-    </Pressable>
-  );
-};
-
-const HomeScreen = () => {
-  const { switchTab, scrollY } = useTabNavigation();
-  const { products: featured, loading: featuredLoading } = useFeaturedProducts();
-  const { categories, loading: categoriesLoading } = useCategories();
-  const { deals, loading: dealsLoading } = useDeals();
-  const featuredDeals = deals.filter((d) => d.isFeatured).slice(0, 3);
-
-  return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
-      <Animated.ScrollView
-        style={styles.scroll}
-        showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-      >
-
-        <WebContentGutter>
-          {/* Promo banner with background image */}
-          <View style={styles.promoContainer}>
-            <Image
-              source={require('../../assets/home/home-bg.webp')}
-              style={styles.promoBackgroundImage}
-              resizeMode="cover"
-            />
-            <View style={styles.promoOverlay}>
-              <TouchableOpacity
-                activeOpacity={0.9}
-                style={styles.promoItem}
-                onPress={() => switchTab('Inventory')}
-              >
-                <View style={styles.promoImageWrapper}>
-                  <Image
-                    source={require('../../assets/home/Deal-of-the-month.webp')}
-                    style={styles.promoItemImage}
-                    resizeMode="contain"
-                  />
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                activeOpacity={0.9}
-                style={styles.promoItem}
-                onPress={() => switchTab('ADRC')}
-              >
-                <View style={styles.promoImageWrapper}>
-                  <Image
-                    source={require('../../assets/home/ADRC-Vehicle-Lift.png')}
-                    style={styles.promoItemImage}
-                    resizeMode="contain"
-                  />
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Categories */}
-          <View style={styles.section}>
-            <SectionHeader title="Shop by Category" onSeeAll={() => switchTab('Inventory')} />
-            {categoriesLoading ? <LoadingSpinner size="small" /> : (
-              <FlatList
-                data={categories}
-                keyExtractor={(item) => item.id?.toString() ?? item.slug}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.horizontalList}
-                renderItem={({ item }) => (
-                  <CategoryCard category={item} onPress={(cat) => switchTab('Inventory', { category: cat.slug, categoryName: cat.name })} />
-                )}
-              />
-            )}
-          </View>
-
-          {/* Featured Deals */}
-          {(featuredDeals.length > 0 || dealsLoading) && (
-            <View style={styles.section}>
-              <SectionHeader title="Current Deals" onSeeAll={() => switchTab('Deals')} />
-              {dealsLoading ? <LoadingSpinner size="small" /> : (
-                <FlatList
-                  data={featuredDeals}
-                  keyExtractor={(item) => item.id?.toString() ?? item.slug}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.horizontalList}
-                  renderItem={({ item }) => (
-                    <DealCard
-                      deal={item}
-                      style={styles.dealCard}
-                      onPress={() => switchTab('Deals')}
-                    />
-                  )}
-                />
-              )}
+      {/* ── Hero banner ── */}
+      {heroDeal && (
+        <TouchableOpacity
+          style={styles.heroBanner}
+          onPress={() => navigation.navigate('Deals')}
+          activeOpacity={0.92}
+        >
+          {heroDeal.imageUrl ? (
+            <Image source={{ uri: heroDeal.imageUrl }} style={styles.heroImage} resizeMode="cover" />
+          ) : (
+            <View style={styles.heroFallback}>
+              <Text style={styles.heroFallbackBadge}>{heroDeal.badgeLabel || 'Special Offer'}</Text>
+              <Text style={styles.heroFallbackTitle}>{heroDeal.title}</Text>
+              <Text style={styles.heroFallbackSub}>{heroDeal.shortDescription}</Text>
             </View>
           )}
+        </TouchableOpacity>
+      )}
 
-          {/* Featured Inventory */}
-          <View style={styles.section}>
-            <SectionHeader title="Featured Products" onSeeAll={() => switchTab('Inventory', { featured: true })} />
-            {featuredLoading ? <LoadingSpinner size="small" /> : (
-              <FlatList
-                data={featured.slice(0, 6)}
-                keyExtractor={(item) => item.id?.toString()}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.horizontalList}
-                renderItem={({ item }) => (
-                  <ProductCard
-                    product={item}
-                    style={styles.productCard}
-                    onPress={() => switchTab('Inventory')}
-                  />
-                )}
+      {/* ── Categories ── */}
+      <SectionHeader title="Shop by Category" onPress={() => navigation.navigate('Products')} />
+      {cLoading ? (
+        <ActivityIndicator style={styles.loader} color={COLORS.primary} />
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catRow}>
+          {categories.map(cat => (
+            <CategoryChip
+              key={cat.id}
+              category={cat}
+              onPress={() => navigation.navigate('Products', { categorySlug: cat.slug, categoryName: cat.name })}
+            />
+          ))}
+        </ScrollView>
+      )}
+
+      {/* ── Featured products ── */}
+      <SectionHeader
+        title="Featured Products"
+        onPress={() => navigation.navigate('Products', { featured: true })}
+      />
+      {pLoading ? (
+        <ActivityIndicator style={styles.loader} color={COLORS.primary} />
+      ) : products.length === 0 ? (
+        <EmptyState message="No featured products right now. Check back soon!" />
+      ) : (
+        <View style={styles.productGrid}>
+          {products.map(product => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onPress={() => navigation.navigate('ProductDetail', { productId: product.id, productName: product.name })}
+            />
+          ))}
+        </View>
+      )}
+
+      {/* ── Active deals strip ── */}
+      {deals.length > 0 && (
+        <>
+          <SectionHeader title="Current Deals" onPress={() => navigation.navigate('Deals')} />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dealsRow}>
+            {deals.map(deal => (
+              <DealChip
+                key={deal.id}
+                deal={deal}
+                onPress={() => navigation.navigate('Deals')}
               />
-            )}
-          </View>
+            ))}
+          </ScrollView>
+        </>
+      )}
 
-          {/* Why Miller Mobility */}
-          <View style={styles.section}>
-            <View style={styles.whyCard}>
-              <Text style={styles.whyTitle}>Why Miller Mobility?</Text>
-              {[
-                { icon: '🏆', text: 'Family owned & operated since 2004' },
-                { icon: '🔧', text: 'Factory-trained installation & service experts' },
-                { icon: '💳', text: 'Flexible financing — ask about 0% APR options' },
-                { icon: '🤝', text: 'Preferred provider for ADRC, IRIS & CLTS programs' },
-                { icon: '🐕', text: 'A warm, welcoming showroom in Oconomowoc, WI' },
-              ].map(({ icon, text }) => (
-                <View key={text} style={styles.whyRow}>
-                  <Text style={styles.whyIcon}>{icon}</Text>
-                  <Text style={styles.whyText}>{text}</Text>
-                </View>
-              ))}
-              <TouchableOpacity style={styles.contactButton} onPress={() => switchTab('Contact')}>
-                <Text style={styles.contactButtonText}>Contact Us →</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Rentals promo strip */}
-          <View style={styles.section}>
-            <View style={styles.rentalsStrip}>
-              <Text style={styles.rentalsTitle}>🔑 Need Equipment Temporarily?</Text>
-              <Text style={styles.rentalsText}>
-                Miller Mobility rents wheelchairs, scooters, stairlifts, lift chairs, patient lifts, and ramps by the
-                day, week, or month. Pickup in store or we'll deliver.
-              </Text>
-              <TouchableOpacity style={styles.rentalsButton} onPress={() => switchTab('Rentals')}>
-                <Text style={styles.rentalsButtonText}>View Rentals →</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </WebContentGutter>
-
-        <SiteFooter onTabPress={switchTab} />
-
-      </Animated.ScrollView>
-    </SafeAreaView>
+      {/* ── Contact CTA ── */}
+      <TouchableOpacity
+        style={styles.ctaBanner}
+        onPress={() => navigation.navigate('Contact')}
+        activeOpacity={0.88}
+      >
+        <Text style={styles.ctaTitle}>Have questions?</Text>
+        <Text style={styles.ctaBody}>Our product experts are ready to help you find the right solution.</Text>
+        <View style={styles.ctaButton}>
+          <Text style={styles.ctaButtonText}>Contact Us →</Text>
+        </View>
+      </TouchableOpacity>
+    </ScrollView>
   );
-};
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function SectionHeader({ title, onPress }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {onPress && (
+        <TouchableOpacity onPress={onPress}>
+          <Text style={styles.sectionLink}>See all →</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+function CategoryChip({ category, onPress }) {
+  return (
+    <TouchableOpacity style={styles.catChip} onPress={onPress} activeOpacity={0.8}>
+      {category.imageUrl ? (
+        <Image source={{ uri: category.imageUrl }} style={styles.catChipImage} />
+      ) : (
+        <View style={styles.catChipImagePlaceholder} />
+      )}
+      <Text style={styles.catChipLabel} numberOfLines={2}>{category.name}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function ProductCard({ product, onPress }) {
+  const imageUrl = getProductImageUrl(product);
+  return (
+    <TouchableOpacity style={[styles.productCard, { width: CARD_WIDTH }]} onPress={onPress} activeOpacity={0.88}>
+      <View style={styles.productImageWrap}>
+        {imageUrl ? (
+          <Image source={{ uri: imageUrl }} style={styles.productImage} resizeMode="contain" />
+        ) : (
+          <View style={styles.productImagePlaceholder}>
+            <Text style={styles.productImagePlaceholderText}>No Image</Text>
+          </View>
+        )}
+        {product.isFeatured && (
+          <View style={styles.featuredBadge}>
+            <Text style={styles.featuredBadgeText}>Featured</Text>
+          </View>
+        )}
+      </View>
+      <View style={styles.productInfo}>
+        <Text style={styles.productCategory} numberOfLines={1}>{product.categoryName}</Text>
+        <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
+        <Text style={styles.productPrice}>{product.displayPrice}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function DealChip({ deal, onPress }) {
+  return (
+    <TouchableOpacity
+      style={[styles.dealChip, { borderLeftColor: deal.badgeColor }]}
+      onPress={onPress}
+      activeOpacity={0.85}
+    >
+      {deal.badgeLabel && (
+        <View style={[styles.dealBadge, { backgroundColor: deal.badgeColor }]}>
+          <Text style={styles.dealBadgeText}>{deal.badgeLabel}</Text>
+        </View>
+      )}
+      <Text style={styles.dealTitle} numberOfLines={2}>{deal.title}</Text>
+      {deal.shortDescription && (
+        <Text style={styles.dealDesc} numberOfLines={2}>{deal.shortDescription}</Text>
+      )}
+      {deal.daysRemaining !== null && (
+        <Text style={styles.dealExpiry}>Ends in {deal.daysRemaining} day{deal.daysRemaining !== 1 ? 's' : ''}</Text>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+function EmptyState({ message }) {
+  return (
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyText}>{message}</Text>
+    </View>
+  );
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  scroll: { flex: 1 },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  content:   { paddingBottom: SPACING.xl * 2 },
 
-  // Promo container with background image and overlaid promo items
-  promoContainer: {
-    position: 'relative',
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
-    marginBottom: Spacing.lg,
-    marginTop: Spacing.md,
-    marginHorizontal: Spacing.sm,
-    height: IS_MOBILE ? 600 : 575,
-    ...Shadows.md,
-  },
-  promoBackgroundImage: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-  },
-  promoOverlay: {
-    flex: 1,
-    flexDirection: IS_MOBILE ? 'column' : 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.md,
-    padding: Spacing.md,
-    zIndex: 1,
-  },
-  promoItem: {
-    flex: IS_MOBILE ? undefined : 1,
-    width: IS_MOBILE ? '100%' : undefined,
-    maxWidth: IS_MOBILE ? 300 : 500,
-    alignSelf: 'center',
-    backgroundColor: 'white',
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
-    ...Shadows.sm,
-    height: IS_MOBILE ? 250 : 400,
-  },
-  promoImageWrapper: {
-    flex: 1,
-    padding: Spacing.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  promoItemImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
-  },
+  // Hero
+  heroBanner:          { margin: SPACING.md, borderRadius: RADIUS.lg, overflow: 'hidden', ...SHADOW.md },
+  heroImage:           { width: '100%', height: 180 },
+  heroFallback:        { backgroundColor: COLORS.primary, padding: SPACING.lg, minHeight: 160, justifyContent: 'center' },
+  heroFallbackBadge:   { color: COLORS.white, fontFamily: FONTS.bold, fontSize: 13, letterSpacing: 1.2, marginBottom: 6, opacity: 0.85 },
+  heroFallbackTitle:   { color: COLORS.white, fontFamily: FONTS.bold, fontSize: 20, marginBottom: 6 },
+  heroFallbackSub:     { color: COLORS.white, fontFamily: FONTS.regular, fontSize: 13, opacity: 0.9 },
 
-  // Sections
-  section: { marginTop: Spacing.xl, paddingHorizontal: IS_WEB_DESKTOP ? 0 : Spacing.base },
-  horizontalList: { paddingRight: Spacing.base },
+  // Section header
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: SPACING.md, marginTop: SPACING.lg, marginBottom: SPACING.sm },
+  sectionTitle:  { fontFamily: FONTS.bold, fontSize: 17, color: COLORS.text },
+  sectionLink:   { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.primary },
 
-  // Category chips
-  categoryCard: { width: HOME_CAT_IMG_SIZE, height: HOME_CAT_IMG_SIZE + (IS_MOBILE ? 50 : 60), backgroundColor: Colors.primary, borderRadius: Radius.lg, overflow: 'hidden', marginRight: Spacing.sm, alignItems: 'center', ...Shadows.sm },
-  categoryImageFrame: { width: '100%', height: HOME_CAT_IMG_SIZE, backgroundColor: Colors.white, justifyContent: 'center', alignItems: 'center' },
-  categoryImage: { width: '100%', height: '100%' },
-  categoryPlaceholder: { width: '100%', height: '100%', backgroundColor: Colors.gray50 },
-  categoryTextWrapper: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.xs },
-  categoryCardName: { fontSize: IS_MOBILE ? 16 : 20, fontWeight: Typography.weights.semibold, color: Colors.white, textAlign: 'center' },
+  // Categories
+  catRow:          { paddingHorizontal: SPACING.md, gap: SPACING.sm },
+  catChip:         { alignItems: 'center', width: 80 },
+  catChipImage:    { width: 70, height: 70, borderRadius: RADIUS.md, marginBottom: 6, backgroundColor: COLORS.surfaceAlt },
+  catChipImagePlaceholder: { width: 70, height: 70, borderRadius: RADIUS.md, marginBottom: 6, backgroundColor: COLORS.surfaceAlt },
+  catChipLabel:    { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textSecondary, textAlign: 'center' },
 
-  // Cards
-  productCard: { width: 200, marginRight: Spacing.md },
-  dealCard: { width: 260, marginRight: Spacing.md },
+  // Product grid
+  productGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.md, paddingHorizontal: SPACING.lg, marginTop: SPACING.xs },
+  productCard: { backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, overflow: 'hidden', ...SHADOW.sm },
+  productImageWrap: { width: '100%', height: 140, backgroundColor: COLORS.surfaceAlt, position: 'relative' },
+  productImage: { width: '100%', height: '100%' },
+  productImagePlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  productImagePlaceholderText: { fontFamily: FONTS.regular, fontSize: 12, color: COLORS.textMuted },
+  featuredBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: COLORS.primary, borderRadius: RADIUS.sm, paddingHorizontal: 7, paddingVertical: 3 },
+  featuredBadgeText: { color: COLORS.white, fontFamily: FONTS.bold, fontSize: 10 },
+  productInfo: { padding: SPACING.sm },
+  productCategory: { fontFamily: FONTS.regular, fontSize: 11, color: COLORS.textSecondary, marginBottom: 3, textTransform: 'uppercase', letterSpacing: 0.5 },
+  productName: { fontFamily: FONTS.semiBold, fontSize: 13, color: COLORS.text, marginBottom: 5 },
+  productPrice: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.primary },
 
-  // Why card
-  whyCard: { backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg, marginBottom: Spacing.lg },
-  whyTitle: { fontSize: Typography.sizes.lg, fontWeight: Typography.weights.heavy, color: Colors.white, marginBottom: Spacing.md },
-  whyRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm, gap: Spacing.md },
-  whyIcon: { fontSize: 20 },
-  whyText: { fontSize: Typography.sizes.base, color: 'rgba(255,255,255,0.85)', flex: 1 },
-  contactButton: { marginTop: Spacing.md, backgroundColor: 'rgba(255,255,255,0.15)', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.full, alignSelf: 'flex-start' },
-  contactButtonText: { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm },
+  // Deals
+  dealsRow:     { paddingHorizontal: SPACING.md, gap: SPACING.sm },
+  dealChip:     { width: 240, backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, padding: SPACING.md, borderLeftWidth: 4, ...SHADOW.sm },
+  dealBadge:    { alignSelf: 'flex-start', borderRadius: RADIUS.sm, paddingHorizontal: 8, paddingVertical: 3, marginBottom: SPACING.xs },
+  dealBadgeText: { color: COLORS.white, fontFamily: FONTS.bold, fontSize: 11 },
+  dealTitle:    { fontFamily: FONTS.semiBold, fontSize: 14, color: COLORS.text, marginBottom: 4 },
+  dealDesc:     { fontFamily: FONTS.regular, fontSize: 12, color: COLORS.textSecondary, marginBottom: 4 },
+  dealExpiry:   { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.danger },
 
-  // Rentals strip
-  rentalsStrip: { backgroundColor: Colors.gray50, borderRadius: Radius.xl, padding: Spacing.lg, borderWidth: 1.5, borderColor: Colors.border, marginBottom: Spacing.lg },
-  rentalsTitle: { fontSize: Typography.sizes.md, fontWeight: Typography.weights.bold, color: Colors.black, marginBottom: Spacing.sm },
-  rentalsText: { fontSize: Typography.sizes.sm, color: Colors.gray600, lineHeight: Typography.sizes.sm * 1.6, marginBottom: Spacing.md },
-  rentalsButton: { backgroundColor: Colors.primary, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.full, alignSelf: 'flex-start' },
-  rentalsButtonText: { color: Colors.white, fontWeight: Typography.weights.bold, fontSize: Typography.sizes.sm },
+  // CTA
+  ctaBanner: { margin: SPACING.md, marginTop: SPACING.lg, backgroundColor: COLORS.primary, borderRadius: RADIUS.lg, padding: SPACING.lg },
+  ctaTitle:  { fontFamily: FONTS.bold, fontSize: 18, color: COLORS.white, marginBottom: 6 },
+  ctaBody:   { fontFamily: FONTS.regular, fontSize: 14, color: COLORS.white, opacity: 0.9, marginBottom: SPACING.md },
+  ctaButton: { alignSelf: 'flex-start', backgroundColor: COLORS.white, borderRadius: RADIUS.md, paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm },
+  ctaButtonText: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.primary },
+
+  // Loader / empty
+  loader:     { marginVertical: SPACING.xl },
+  emptyState: { padding: SPACING.xl, alignItems: 'center' },
+  emptyText:  { fontFamily: FONTS.regular, fontSize: 14, color: COLORS.textSecondary, textAlign: 'center' },
 });
-
-export default HomeScreen;

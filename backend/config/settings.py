@@ -1,16 +1,14 @@
 """
-Django settings for Miller Mobility project.
+Django settings for Miller Mobility — PostgreSQL / Neon backend.
 """
 
 from pathlib import Path
 import os
 import dj_database_url
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Load .env file if present
-from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-key-change-in-production")
 DEBUG = os.environ.get("DEBUG", "True") == "True"
@@ -64,13 +62,33 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ['DATABASE_URL'],
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
+# ── Database — Neon PostgreSQL ────────────────────────────────────────────────
+# Set DATABASE_URL in .env  e.g.:
+#   DATABASE_URL=postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+#
+# For local fallback during development, set FALLBACK_SQLITE=True
+
+_DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if _DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            _DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+    # Neon requires SSL
+    if "neon.tech" in _DATABASE_URL:
+        DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
+else:
+    # Local SQLite fallback so the project still runs without a Neon connection
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -109,4 +127,4 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8081",
     "exp://localhost:8081",
 ]
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # Permissive in dev only
+CORS_ALLOW_ALL_ORIGINS = DEBUG

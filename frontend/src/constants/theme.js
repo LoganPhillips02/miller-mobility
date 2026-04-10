@@ -1,113 +1,64 @@
-export const Colors = {
+export const COLORS = {
   // Brand
-  primary: '#003366',       // Deep navy — Miller Mobility blue
-  primaryLight: '#1A4D8A',
-  primaryDark: '#001F3F',
-  accent: '#E63946',        // Alert red for badges / CTAs
-  accentLight: '#FF6B6B',
+  primary:     '#1C4A8A',   // Miller Mobility navy blue
+  primaryDark: '#133368',
+  primaryLight:'#E8EFF9',
+  accent:      '#E63946',   // red for badges/deals
 
   // Neutrals
-  white: '#FFFFFF',
-  offWhite: '#F7F9FC',
-  gray50: '#F0F4F8',
-  gray100: '#E2E8F0',
-  gray200: '#CBD5E0',
-  gray400: '#94A3B8',
-  gray600: '#475569',
-  gray800: '#1E293B',
-  black: '#0F172A',
+  background:  '#F4F6FA',
+  surface:     '#FFFFFF',
+  surfaceAlt:  '#F0F2F7',
+  border:      '#E2E6EF',
 
-  // Semantic
+  // Text
+  text:          '#1A1E2E',
+  textSecondary: '#4B5573',
+  textMuted:     '#9BA3BF',
+  white:         '#FFFFFF',
+
+  // Status
   success: '#16A34A',
   warning: '#D97706',
-  error: '#DC2626',
-  info: '#0284C7',
-
-  // Backgrounds
-  background: '#F7F9FC',
-  surface: '#FFFFFF',
-  surfaceElevated: '#FFFFFF',
-  border: '#dddddd',
+  danger:  '#DC2626',
+  info:    '#2563EB',
 };
 
-export const Typography = {
-  // Font families (loaded via expo-font or system)
-  fontFamily: {
-    regular: 'System',
-    medium: 'System',
-    bold: 'System',
-    heavy: 'System',
-  },
-
-  sizes: {
-    xs: 11,
-    sm: 13,
-    base: 15,
-    md: 17,
-    lg: 19,
-    xl: 22,
-    '2xl': 26,
-    '3xl': 32,
-    '4xl': 40,
-  },
-
-  weights: {
-    regular: '400',
-    medium: '500',
-    semibold: '600',
-    bold: '700',
-    heavy: '800',
-  },
-
-  lineHeights: {
-    tight: 1.2,
-    normal: 1.5,
-    loose: 1.8,
-  },
+export const FONTS = {
+  regular:  'System',
+  medium:   'System',
+  semiBold: 'System',
+  bold:     'System',
 };
 
-export const Spacing = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  base: 16,
-  lg: 20,
-  xl: 24,
-  '2xl': 32,
-  '3xl': 40,
-  '4xl': 48,
-  '5xl': 64,
+export const SPACING = {
+  xs:  4,
+  sm:  8,
+  md:  16,
+  lg:  20,
+  xl:  32,
 };
 
-export const Radius = {
-  sm: 4,
-  md: 8,
-  lg: 12,
-  xl: 16,
-  '2xl': 24,
-  full: 9999,
+export const RADIUS = {
+  sm:  6,
+  md:  10,
+  lg:  16,
+  xl:  24,
 };
 
-export const Shadows = {
+export const SHADOW = {
   sm: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
-    shadowRadius: 3,
+    shadowRadius: 4,
     elevation: 2,
   },
   md: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.10,
-    shadowRadius: 6,
+    shadowRadius: 8,
     elevation: 4,
-  },
-  lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.14,
-    shadowRadius: 12,
-    elevation: 8,
   },
 };

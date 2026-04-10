@@ -4,19 +4,17 @@ export const API_BASE_URL = __DEV__
 
 export const ENDPOINTS = {
   // Products
-  PRODUCTS: '/products/',
-  PRODUCT_DETAIL: (id) => `/products/${id}/`,
+  PRODUCTS:          '/products/',
+  PRODUCT_DETAIL:    (id) => `/products/${id}/`,
   PRODUCTS_FEATURED: '/products/featured/',
-  PRODUCTS_VEHICLES: '/products/vehicles/',
-  CATEGORIES: '/products/categories/',
-  CATEGORY_DETAIL: (slug) => `/products/categories/${slug}/`,
-  BRANDS: '/products/brands/',
-
+  CATEGORIES:        '/products/categories/',
+  BRANDS:            '/products/brands/',
   // Deals
-  DEALS: '/deals/',
-  DEALS_ACTIVE: '/deals/active/',
-  DEAL_DETAIL: (slug) => `/deals/${slug}/`,
-  TRADE_IN: '/deals/trade-in/',
+  DEALS:             '/deals/',
+  DEALS_ACTIVE:      '/deals/active/',
+  DEAL_DETAIL:       (slug) => `/deals/${slug}/`,
+  // Contact
+  CONTACT:           '/contact/inquiries/',
 };
 
-export const REQUEST_TIMEOUT = 10000; // 10 seconds
+export const REQUEST_TIMEOUT = 12000;
