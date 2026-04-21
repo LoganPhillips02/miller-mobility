@@ -1,5 +1,5 @@
 export const API_BASE_URL = __DEV__
-  ? 'http://cuddly-space-fiesta-r4g97w6rq74h946-8000.app.github.dev/api'
+  ? 'https://cuddly-space-fiesta-r4g97w6rq74h946-8000.app.github.dev/api'
   : 'https://api.millermobility.com/api';
 
 export const ENDPOINTS = {

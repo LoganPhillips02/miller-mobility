@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { productsApi, categoriesApi, dealsApi, brandsApi, ApiError } from '../services/api';
+import { createProduct } from '../models/index';
 
 // ─── Generic fetch hook ───────────────────────────────────────────────────────
 
@@ -41,7 +42,7 @@ export function useProducts(params = {}) {
     [key]
   );
   return {
-    products: data?.results ?? [],
+    products: (data?.results ?? []).map(createProduct),
     count:    data?.count ?? 0,
     next:     data?.next,
     previous: data?.previous,
@@ -56,12 +57,12 @@ export function useProduct(id) {
     () => productsApi.get(id),
     [id]
   );
-  return { product: data, loading, error, refetch };
+  return { product: data ? createProduct(data) : null, loading, error, refetch };
 }
 
 export function useFeaturedProducts() {
   const { data, loading, error, refetch } = useFetch(() => productsApi.featured());
-  return { products: data ?? [], loading, error, refetch };
+  return { products: (data ?? []).map(createProduct), loading, error, refetch };
 }
 
 // ─── Categories ───────────────────────────────────────────────────────────────
@@ -109,7 +110,8 @@ export function usePaginatedProducts(initialParams = {}) {
     setError(null);
     try {
       const data = await productsApi.list(params);
-      setProducts(prev => replace ? (data.results ?? []) : [...prev, ...(data.results ?? [])]);
+      const mapped = (data.results ?? []).map(createProduct);
+      setProducts(prev => replace ? mapped : [...prev, ...mapped]);
       setNextUrl(data.next ?? null);
       setTotal(data.count ?? 0);
     } catch (err) {

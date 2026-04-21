@@ -1,220 +1,385 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, TextInput, Image,
-  StyleSheet, ActivityIndicator, ScrollView,
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  Pressable,
+  StyleSheet,
+  SafeAreaView,
+  Animated,
+  Dimensions,
+  Image,
 } from 'react-native';
-import { usePaginatedProducts, useCategories } from '../hooks/useApi';
-import { normalizeProduct, normalizeCategory, getProductImageUrl } from '../models/product';
-import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { getWebBodyContentWidth } from '../constants/webLayout';
+import WebContentGutter from '../components/WebContentGutter';
+import { Colors, Typography, Spacing, Radius, Shadows } from '../constants/theme';
+import { useProducts, useCategories } from '../hooks/useProducts';
+import { useSearch } from '../hooks/useSearch';
+import ProductCard from '../components/ProductCard';
+import SiteFooter from '../components/SiteFooter';
+import { LoadingSpinner, ErrorView, EmptyState } from '../components/ui';
+import { useTabNavigation } from '../navigation/TabNavigationContext';
 
-export default function ProductsScreen({ navigation, route }) {
-  const initialCategory = route?.params?.categorySlug ?? '';
-  const initialName     = route?.params?.categoryName ?? '';
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const IS_MOBILE = SCREEN_WIDTH < 768;
 
-  const [search,      setSearch]      = useState('');
-  const [activeSlug,  setActiveSlug]  = useState(initialCategory);
-  const [activeName,  setActiveName]  = useState(initialName);
-  const [searchDebounced, setSearchDebounced] = useState('');
+const NUM_COLUMNS = IS_MOBILE ? 2 : 4;
+const GRID_PADDING = IS_MOBILE ? Spacing.md * 2 : 0;
+const CARD_GAP = Spacing.sm;
+const GRID_OUTER_WIDTH = getWebBodyContentWidth();
+const CARD_WIDTH =
+  (GRID_OUTER_WIDTH - GRID_PADDING - CARD_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+const CAT_IMG_SIZE = CARD_WIDTH;
 
-  // Debounce search
-  const debounceRef = React.useRef(null);
-  const handleSearchChange = useCallback((text) => {
-    setSearch(text);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => setSearchDebounced(text), 400);
-  }, []);
+const CATEGORY_IMAGES = {
+  'stairlifts': require('../../assets/products/stairLifts/s-lift-sre3050.jpg'),
+  'mobility-scooters': require('../../assets/products/scooters/m-scooter-sc15.webp'),
+  'power-wheelchairs': require('../../assets/products/powerChairs/pw-chair-j27x.jpg'),
+  'lift-chairs-power-recliners': require('../../assets/products/recliners/rec-pr764.webp'),
+  'wheelchairs-transport-chairs': require('../../assets/products/wheelchairs/w-chair-ak2.webp'),
+  'walkers-rollators': require('../../assets/products/walkers/walker-rrd.png'),
+  'vehicle-lifts': require('../../assets/products/vehicleLifts/car-lift-asl275.jpg'),
+  'patient-lifts': require('../../assets/products/patientLifts/p-lift-sa400.png'),
+  'ramps': require('../../assets/products/ramps/ramp.png'),
+  'beds':require('../../assets/products/beds/beds.jpg'),
+  'vertical-platform-lifts':require('../../assets/products/platformLifts/platform-lift.png'),
+  'security-poles':require('../../assets/products/poles/pole-bsb.png'),
+  'tables-trays':require('../../assets/products/tables/tables.png'),
+};
 
-  const params = useMemo(() => ({
-    ...(activeSlug && { category: activeSlug }),
-    ...(searchDebounced && { search: searchDebounced }),
-  }), [activeSlug, searchDebounced]);
+const resolveCategoryImageSource = (src) => {
+  if (src == null) return null;
+  if (typeof src === 'number') return src;
+  if (typeof src === 'string') return { uri: src };
+  if (typeof src === 'object' && typeof src.uri === 'string') return src;
+  return null;
+};
 
-  const { products: rawProducts, loading, error, hasMore, loadMore, total } = usePaginatedProducts(params);
-  const { categories: rawCats } = useCategories();
+// ─── Category card ────────────────────────────────────────────────────────────
+const CategoryCard = ({ category, onPress }) => {
+  const imageSource = CATEGORY_IMAGES[category.slug];
+  const [imgError, setImgError] = useState(false);
 
-  const products   = rawProducts.map(normalizeProduct);
-  const categories = rawCats.map(normalizeCategory);
-
-  const selectCategory = useCallback((slug, name) => {
-    setActiveSlug(slug);
-    setActiveName(name);
-    setSearch('');
-    setSearchDebounced('');
-  }, []);
-
-  const renderProduct = useCallback(({ item: product }) => (
-    <TouchableOpacity
-      style={styles.row}
-      onPress={() => navigation.navigate('ProductDetail', { productId: product.id, productName: product.name })}
-      activeOpacity={0.85}
-    >
-      <ProductRowImage product={product} />
-      <View style={styles.rowInfo}>
-        <Text style={styles.rowCategory} numberOfLines={1}>{product.categoryName}</Text>
-        <Text style={styles.rowName} numberOfLines={2}>{product.name}</Text>
-        {product.brandName ? <Text style={styles.rowBrand} numberOfLines={1}>{product.brandName}</Text> : null}
-        <Text style={styles.rowPrice}>{product.displayPrice}</Text>
-      </View>
-    </TouchableOpacity>
-  ), [navigation]);
-
-  const ListHeader = useMemo(() => (
-    <View>
-      {/* Search bar */}
-      <View style={styles.searchWrap}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search products..."
-          placeholderTextColor={COLORS.textMuted}
-          value={search}
-          onChangeText={handleSearchChange}
-          returnKeyType="search"
-          clearButtonMode="while-editing"
-        />
-      </View>
-
-      {/* Category pills */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catRow}>
-        <CategoryPill label="All" active={!activeSlug} onPress={() => selectCategory('', '')} />
-        {categories.map(cat => (
-          <CategoryPill
-            key={cat.slug}
-            label={cat.name}
-            count={cat.productCount}
-            active={activeSlug === cat.slug}
-            onPress={() => selectCategory(cat.slug, cat.name)}
-          />
-        ))}
-      </ScrollView>
-
-      {/* Result count */}
-      <View style={styles.resultsMeta}>
-        <Text style={styles.resultsText}>
-          {loading && products.length === 0
-            ? 'Loading…'
-            : `${total} product${total !== 1 ? 's' : ''}${activeName ? ` in ${activeName}` : ''}`}
-        </Text>
-      </View>
-    </View>
-  ), [search, handleSearchChange, categories, activeSlug, activeName, selectCategory, loading, products.length, total]);
-
-  const ListFooter = useCallback(() => {
-    if (!loading) return null;
-    return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator color={COLORS.primary} />
-      </View>
-    );
-  }, [loading]);
-
-  if (error && products.length === 0) {
-    return (
-      <View style={styles.errorState}>
-        <Text style={styles.errorTitle}>Couldn't load products</Text>
-        <Text style={styles.errorBody}>{error.message}</Text>
-      </View>
-    );
-  }
+  const imageResolvedSource = resolveCategoryImageSource(imageSource);
+  const showImage = imageResolvedSource != null && !imgError;
 
   return (
-    <View style={styles.container}>
+    <Pressable
+      style={({ pressed, hovered }) => [
+        styles.categoryCard,
+        { opacity: pressed ? 0.7 : hovered ? 0.8 : 1 }
+      ]}
+      onPress={() => onPress(category)}
+    >
+      {showImage ? (
+        <View style={styles.categoryImageFrame}>
+          <Image
+            source={imageResolvedSource}
+            style={styles.categoryImage}
+            resizeMode="contain"
+            onError={() => setImgError(true)}
+          />
+        </View>
+      ) : (
+        <View style={styles.categoryPlaceholder} />
+      )}
+
+      <Text style={styles.categoryCardName} numberOfLines={2}>
+        {category.name}
+      </Text>
+    </Pressable>
+  );
+};
+
+// ─── Main screen ──────────────────────────────────────────────────────────────
+const ProductsScreen = ({ navigation, route }) => {
+  const { switchTab, scrollY } = useTabNavigation();
+
+  const initialCategory = route.params?.category ?? '';
+
+  const [search, setSearch] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedCategoryName, setSelectedCategoryName] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  const [showCategoryGrid, setShowCategoryGrid] = useState(
+    !initialCategory && !route.params?.featured,
+  );
+
+  const { recentSearches, saveSearch, removeSearch } = useSearch();
+  const transitioning = React.useRef(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(search);
+      if (search.trim()) saveSearch(search.trim());
+    }, 500);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    if (route.params?.category !== undefined) {
+      const slug = route.params.category;
+      setSelectedCategory(slug);
+      if (slug) setShowCategoryGrid(false);
+    }
+    if (route.params?.featured) setShowCategoryGrid(false);
+  }, [route.params?.category, route.params?.featured]);
+
+  useEffect(() => {
+    if (debouncedSearch) setShowCategoryGrid(false);
+  }, [debouncedSearch]);
+
+  const filters = {
+    ...(selectedCategory && { category: selectedCategory }),
+    ...(debouncedSearch && { search: debouncedSearch }),
+  };
+
+  const { products, loading, error, hasMore, loadMore, refresh } = useProducts(filters);
+  const { categories, loading: catsLoading } = useCategories();
+
+  const handleProductPress = (product) =>
+    navigation.navigate('ProductDetail', { id: product.id, name: product.name });
+
+  const handleCategoryPress = useCallback((cat) => {
+    transitioning.current = true;
+    setSelectedCategory(cat.slug);
+    setSelectedCategoryName(cat.name);
+    setShowCategoryGrid(false);
+    scrollY.setValue(0);
+  }, [scrollY]);
+
+  const handleBackToCategories = () => {
+    setSelectedCategory('');
+    setSelectedCategoryName('');
+    setSearch('');
+    setDebouncedSearch('');
+    setShowCategoryGrid(true);
+    scrollY.setValue(0);
+  };
+
+  const handleClearSearch = () => {
+    setSearch('');
+    setDebouncedSearch('');
+    if (!selectedCategory) setShowCategoryGrid(true);
+  };
+
+  const showSuggestions =
+    searchFocused && search.length === 0 && recentSearches.length > 0;
+
+  // ── Category grid ──────────────────────────────────────────────────────────
+  const renderCategoryGrid = () => {
+    if (catsLoading) return <LoadingSpinner full />;
+    const COLS = IS_MOBILE ? 2 : 4;
+    return (
+      <Animated.ScrollView
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false },
+        )}
+      >
+        <View style={styles.categoryGridHeader}>
+          <Text style={styles.categoryGridTitle}>Shop by Category</Text>
+          <Text style={styles.categoryGridSub}>
+            Select a category to browse our mobility products
+          </Text>
+        </View>
+
+        <WebContentGutter>
+          <FlatList
+            data={categories}
+            keyExtractor={(item) => item.id?.toString() ?? item.slug}
+            numColumns={COLS}
+            key={`catgrid-${COLS}`}
+            contentContainerStyle={styles.categoryGrid}
+            columnWrapperStyle={styles.categoryGridRow}
+            renderItem={({ item }) => (
+              <CategoryCard category={item} onPress={handleCategoryPress} />
+            )}
+            scrollEnabled={false}
+          />
+        </WebContentGutter>
+
+        <SiteFooter onTabPress={switchTab} />
+      </Animated.ScrollView>
+    );
+  };
+
+  // ── Product list ───────────────────────────────────────────────────────────
+  const renderProductList = () => {
+    if (loading) transitioning.current = false;
+    if (error) return <ErrorView message={error} onRetry={refresh} />;
+    if (loading || transitioning.current) return <LoadingSpinner full />;
+    if (products.length === 0) {
+      return (
+        <EmptyState
+          icon="🔍"
+          title="No products found"
+          message="Try adjusting your search or browse a different category."
+          action="Browse Categories"
+          onAction={handleBackToCategories}
+        />
+      );
+    }
+    return (
       <FlatList
         data={products}
-        keyExtractor={p => String(p.id)}
-        renderItem={renderProduct}
-        ListHeaderComponent={ListHeader}
-        ListFooterComponent={ListFooter}
-        onEndReached={hasMore ? loadMore : undefined}
+        keyExtractor={(item) => item.id?.toString()}
+        numColumns={NUM_COLUMNS}
+        key={`prodgrid-${NUM_COLUMNS}`}
+        contentContainerStyle={styles.productGrid}
+        columnWrapperStyle={styles.productRow}
+        renderItem={({ item }) => (
+          <ProductCard
+            product={item}
+            style={styles.productCard}
+            onPress={handleProductPress}
+          />
+        )}
+        onEndReached={loadMore}
         onEndReachedThreshold={0.4}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          !loading
-            ? <EmptyState search={searchDebounced} category={activeName} />
-            : null
-        }
+        ListFooterComponent={hasMore ? <LoadingSpinner size="small" /> : null}
+        scrollEnabled={false}
       />
-    </View>
-  );
-}
+    );
+  };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function ProductRowImage({ product }) {
-  const imageUrl = getProductImageUrl(product);
   return (
-    <View style={styles.rowImageWrap}>
-      {imageUrl ? (
-        <Image source={{ uri: imageUrl }} style={styles.rowImage} resizeMode="contain" />
-      ) : (
-        <View style={styles.rowImagePlaceholder} />
+    <SafeAreaView style={styles.safe}>
+      {/* Search bar */}
+      <View style={styles.searchBar}>
+        {!showCategoryGrid && (
+          <TouchableOpacity
+            style={styles.backChip}
+            onPress={handleBackToCategories}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.backChipText}>‹ All</Text>
+          </TouchableOpacity>
+        )}
+        <TextInput
+          style={styles.searchInput}
+          placeholder={
+            selectedCategoryName
+              ? `Search in ${selectedCategoryName}…`
+              : 'Search inventory…'
+          }
+          placeholderTextColor={Colors.gray400}
+          value={search}
+          onChangeText={setSearch}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+          returnKeyType="search"
+        />
+        {search.length > 0 && (
+          <TouchableOpacity
+            onPress={handleClearSearch}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={styles.clearBtn}>✕</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Recent search suggestions */}
+      {showSuggestions && (
+        <View style={styles.suggestions}>
+          {recentSearches.slice(0, 5).map((term) => (
+            <TouchableOpacity
+              key={term}
+              style={styles.suggestionRow}
+              onPress={() => {
+                setSearch(term);
+                setSearchFocused(false);
+                setShowCategoryGrid(false);
+              }}
+            >
+              <Text style={styles.suggestionIcon}>🕐</Text>
+              <Text style={styles.suggestionText}>{term}</Text>
+              <TouchableOpacity
+                onPress={() => removeSearch(term)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.suggestionRemove}>✕</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ))}
+        </View>
       )}
-    </View>
-  );
-}
 
-function CategoryPill({ label, count, active, onPress }) {
-  return (
-    <TouchableOpacity
-      style={[styles.pill, active && styles.pillActive]}
-      onPress={onPress}
-      activeOpacity={0.75}
-    >
-      <Text style={[styles.pillText, active && styles.pillTextActive]}>
-        {label}{count ? ` (${count})` : ''}
-      </Text>
-    </TouchableOpacity>
-  );
-}
+      {/* Breadcrumb (product list only) */}
+      {!showCategoryGrid && selectedCategoryName ? (
+        <View style={styles.breadcrumb}>
+          <Text style={styles.breadcrumbText} numberOfLines={1}>
+            {selectedCategoryName}
+          </Text>
+          {!loading && (
+            <Text style={styles.breadcrumbCount}>
+              {products.length}
+              {hasMore ? '+' : ''} item{products.length !== 1 ? 's' : ''}
+            </Text>
+          )}
+        </View>
+      ) : null}
 
-function EmptyState({ search, category }) {
-  return (
-    <View style={styles.emptyState}>
-      <Text style={styles.emptyTitle}>No products found</Text>
-      <Text style={styles.emptyBody}>
-        {search
-          ? `No results for "${search}"${category ? ` in ${category}` : ''}.`
-          : `No products available${category ? ` in ${category}` : ''} right now.`}
-      </Text>
-    </View>
+      {/* Main content */}
+      {showCategoryGrid ? (
+        renderCategoryGrid()
+      ) : (
+        <Animated.ScrollView
+          scrollEventThrottle={16}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false },
+          )}
+        >
+          <WebContentGutter>{renderProductList()}</WebContentGutter>
+          <SiteFooter onTabPress={switchTab} />
+        </Animated.ScrollView>
+      )}
+    </SafeAreaView>
   );
-}
+};
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  list:      { paddingBottom: SPACING.xl * 2 },
+  safe: { flex: 1, backgroundColor: Colors.background },
 
-  searchWrap:  { margin: SPACING.md, borderRadius: RADIUS.md, backgroundColor: COLORS.surface, ...SHADOW.sm },
-  searchInput: { fontFamily: FONTS.regular, fontSize: 15, color: COLORS.text, paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm + 2 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: Spacing.sm },
+  backChip: { backgroundColor: Colors.primary, paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs + 1, borderRadius: Radius.full },
+  backChipText: { color: Colors.white, fontSize: Typography.sizes.sm, fontWeight: Typography.weights.bold },
+  searchInput: { flex: 1, fontSize: Typography.sizes.base, color: Colors.black, paddingVertical: Spacing.sm },
+  clearBtn: { fontSize: 16, color: Colors.gray400, paddingHorizontal: Spacing.sm },
 
-  catRow: { paddingHorizontal: SPACING.md, gap: SPACING.xs, marginBottom: SPACING.xs },
-  pill:       { paddingHorizontal: SPACING.sm + 4, paddingVertical: SPACING.xs + 2, borderRadius: 20, backgroundColor: COLORS.surfaceAlt, marginRight: 4 },
-  pillActive: { backgroundColor: COLORS.primary },
-  pillText:       { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textSecondary },
-  pillTextActive: { color: COLORS.white },
+  suggestions: { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  suggestionRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, gap: Spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
+  suggestionIcon: { fontSize: 14 },
+  suggestionText: { flex: 1, fontSize: Typography.sizes.base, color: Colors.black },
+  suggestionRemove: { fontSize: 12, color: Colors.gray400 },
 
-  resultsMeta:  { paddingHorizontal: SPACING.md, paddingVertical: SPACING.xs, marginBottom: SPACING.xs },
-  resultsText:  { fontFamily: FONTS.regular, fontSize: 13, color: COLORS.textSecondary },
+  breadcrumb: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.primaryDark ?? Colors.primary, paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm },
+  breadcrumbText: { fontSize: Typography.sizes.sm, fontWeight: Typography.weights.bold, color: Colors.white, flex: 1 },
+  breadcrumbCount: { fontSize: Typography.sizes.xs, color: 'rgba(255,255,255,0.65)', marginLeft: Spacing.sm },
 
-  row:          { flexDirection: 'row', backgroundColor: COLORS.surface, marginHorizontal: SPACING.md, marginBottom: SPACING.sm, borderRadius: RADIUS.lg, overflow: 'hidden', ...SHADOW.sm },
-  rowImageWrap: { width: 110, height: 110, backgroundColor: COLORS.surfaceAlt },
-  rowImage:     { width: '100%', height: '100%' },
-  rowImagePlaceholder: { flex: 1, backgroundColor: COLORS.surfaceAlt },
-  rowInfo:      { flex: 1, padding: SPACING.md, justifyContent: 'center' },
-  rowCategory:  { fontFamily: FONTS.regular, fontSize: 11, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 },
-  rowName:      { fontFamily: FONTS.semiBold, fontSize: 14, color: COLORS.text, marginBottom: 3 },
-  rowBrand:     { fontFamily: FONTS.regular, fontSize: 12, color: COLORS.textSecondary, marginBottom: 5 },
-  rowPrice:     { fontFamily: FONTS.bold, fontSize: 15, color: COLORS.primary },
+  categoryGridHeader: { backgroundColor: Colors.primary, paddingHorizontal: Spacing.base, paddingTop: Spacing.lg, paddingBottom: Spacing.xl },
+  categoryGridTitle: { fontSize: Typography.sizes['2xl'], fontWeight: Typography.weights.heavy, color: Colors.white, marginBottom: Spacing.xs },
+  categoryGridSub: { fontSize: Typography.sizes.sm, color: 'rgba(255,255,255,0.7)' },
+  categoryGrid: { paddingHorizontal: IS_MOBILE ? Spacing.md : 0, paddingVertical: Spacing.md },
+  categoryGridRow: { justifyContent: 'flex-start', marginBottom: Spacing.sm, gap: CARD_GAP },
 
-  footerLoader: { padding: SPACING.lg, alignItems: 'center' },
+  categoryCard: { width: CARD_WIDTH, backgroundColor: Colors.primary, borderRadius: Radius.lg, overflow: 'hidden', shadowColor: Colors.black, shadowOpacity: 0.8, shadowRadius: Radius.lg, borderWidth: IS_MOBILE ? 2 : 5, borderColor: Colors.border },
+  categoryImageFrame: { width: CAT_IMG_SIZE, height: CAT_IMG_SIZE, backgroundColor: Colors.white },
+  categoryImage: { width: CAT_IMG_SIZE, height: CAT_IMG_SIZE },
+  categoryPlaceholder: { width: CAT_IMG_SIZE, height: CAT_IMG_SIZE, backgroundColor: Colors.gray50 },
+  categoryCardName: { fontSize: IS_MOBILE ? Typography.sizes.lg : Typography.sizes.xl, fontWeight: Typography.weights.bold, color: Colors.white, textAlign: 'center', marginTop: Spacing.md, marginBottom: Spacing.md, paddingHorizontal: Spacing.md },
 
-  errorState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl },
-  errorTitle: { fontFamily: FONTS.bold, fontSize: 18, color: COLORS.text, marginBottom: 8 },
-  errorBody:  { fontFamily: FONTS.regular, fontSize: 14, color: COLORS.textSecondary, textAlign: 'center' },
-
-  emptyState: { padding: SPACING.xl * 2, alignItems: 'center' },
-  emptyTitle: { fontFamily: FONTS.semiBold, fontSize: 16, color: COLORS.text, marginBottom: 8 },
-  emptyBody:  { fontFamily: FONTS.regular, fontSize: 14, color: COLORS.textSecondary, textAlign: 'center' },
+  productGrid: { paddingHorizontal: IS_MOBILE ? Spacing.md : 0, paddingVertical: Spacing.sm, paddingBottom: Spacing.base },
+  productRow: { justifyContent: 'flex-start', marginBottom: Spacing.sm, gap: CARD_GAP },
+  productCard: { width: CARD_WIDTH },
 });
+
+export default ProductsScreen;

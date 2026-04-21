@@ -29,11 +29,17 @@ BASE_URL = "https://www.millermobility.com"
 
 HEADERS = {
     "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/124.0.0.0 Safari/537.36"
     ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Cache-Control": "max-age=0",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
 }
 
 # ─── Category definitions with slugs matching millermobility.com URLs ────────
@@ -247,34 +253,56 @@ DEALS_DATA = [
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
-def fetch_page(url: str, session: requests.Session) -> BeautifulSoup | None:
-    """Fetch a URL and return a BeautifulSoup object, or None on failure."""
+PRODUCT_IMG_PATTERN = re.compile(
+    r"https://d2j6dbq0eux0bg\.cloudfront\.net/images/\d+/products/\d+/(\d+)\.(gif|jpg|jpeg|png|webp)",
+    re.I,
+)
+
+_SKIP_FILENAME = [
+    "logo", "flag", "icon", "bbb", "homeadvisor", "google", "button",
+    "_logo", "brochure", "spec_sheet", "soap", "border", "review",
+    "testimonial", "banner", "background", "divider", "footer", "header",
+    "rating", "trust", "award", "cert", "ribbon",
+]
+
+
+def fetch_page(url: str, session: requests.Session) -> tuple[BeautifulSoup | None, str]:
+    """Fetch a URL and return (BeautifulSoup, raw_html), or (None, '') on failure."""
     try:
-        resp = session.get(url, headers=HEADERS, timeout=15)
+        resp = session.get(url, headers=HEADERS, timeout=20)
         resp.raise_for_status()
-        return BeautifulSoup(resp.text, "lxml")
+        return BeautifulSoup(resp.text, "lxml"), resp.text
     except Exception as exc:
         logger.warning("Failed to fetch %s: %s", url, exc)
-        return None
+        return None, ""
 
 
-def extract_image_urls(soup: BeautifulSoup, base_url: str) -> list[str]:
-    """Extract all product image URLs from a page, filtering out logos/icons."""
+def extract_image_urls(soup: BeautifulSoup, base_url: str, raw_html: str = "") -> list[str]:
+    """
+    Extract product image URLs from raw HTML.
+    Miller Mobility (Duda CMS) embeds product images as inline background-image styles.
+    Images live at cloudfront.net/images/{siteId}/products/{productId}/{imageId}.ext
+    Duda stores pairs (full-size + thumbnail) with IDs differing by 2 — we keep only one per pair.
+    """
+    html = raw_html or str(soup)
+    matches = PRODUCT_IMG_PATTERN.finditer(html)
+    seen_ids = []
     urls = []
-    cdn_pattern = re.compile(r"cdn-website\.com|lirp\.cdn|irp\.cdn", re.I)
 
-    for img in soup.find_all("img"):
-        src = img.get("src") or img.get("data-src") or ""
-        if not src:
+    for m in matches:
+        url = m.group(0)
+        img_id = int(m.group(1))
+        filename = url.split("/")[-1].lower()
+
+        if any(skip in filename for skip in _SKIP_FILENAME):
             continue
-        # Skip SVG logos, tiny icons, flags
-        if any(skip in src.lower() for skip in [".svg", "logo", "flag", "icon", "bbb", "homeadvisor", "google"]):
+
+        if any(abs(img_id - seen) <= 2 for seen in seen_ids):
             continue
-        # Prefer CDN images (actual product photos)
-        if cdn_pattern.search(src):
-            full_url = urljoin(base_url, src)
-            if full_url not in urls:
-                urls.append(full_url)
+
+        seen_ids.append(img_id)
+        if url not in urls:
+            urls.append(url)
 
     return urls
 
@@ -317,14 +345,14 @@ def scrape_category_page(
 ) -> list[dict]:
     """Scrape a category page and return a list of product dicts."""
     url = urljoin(BASE_URL, cat_config["url"])
-    soup = fetch_page(url, session)
+    soup, raw_html = fetch_page(url, session)
     if not soup:
         return []
 
     products = []
 
     # Category hero image
-    hero_imgs = extract_image_urls(soup, url)
+    hero_imgs = extract_image_urls(soup, url, raw_html)
     if hero_imgs and not dry_run:
         category_obj.image_url = hero_imgs[0]
         category_obj.save(update_fields=["image_url"])
@@ -358,7 +386,7 @@ def scrape_product_page(
     brand_map: dict,
 ) -> dict | None:
     """Scrape a single product page."""
-    soup = fetch_page(product_url, session)
+    soup, raw_html = fetch_page(product_url, session)
     if not soup:
         return None
 
@@ -368,7 +396,7 @@ def scrape_product_page(
         or soup.find("h2", class_=re.compile(r"product", re.I))
         or soup.find(class_=re.compile(r"product.*title|title.*product", re.I))
     )
-    name = clean_text(title_el.get_text()) if title_el else ""
+    name = clean_text(title_el.get_text())[:490] if title_el else ""
     if not name or len(name) < 4:
         return None
 
@@ -396,7 +424,7 @@ def scrape_product_page(
     short_desc = desc[:300] if desc else f"{name} — available at Miller Mobility Products."
 
     # Images
-    images = extract_image_urls(soup, product_url)
+    images = extract_image_urls(soup, product_url, raw_html)
     primary_image_url = images[0] if images else ""
 
     # Brand detection
@@ -410,7 +438,7 @@ def scrape_product_page(
         "description": desc,
         "short_description": short_desc,
         "primary_image_url": primary_image_url,
-        "extra_images": images[1:6],  # up to 5 additional
+        "all_images": images[:10],
         "brand": brand,
         "call_for_price": True,
         "condition": "new",
@@ -428,7 +456,7 @@ def scrape_category_images_from_homepage(session: requests.Session) -> dict[str,
     Returns {category_slug: image_url}.
     """
     cat_images = {}
-    soup = fetch_page(f"{BASE_URL}/our-products", session)
+    soup, _ = fetch_page(f"{BASE_URL}/our-products", session)
     if not soup:
         return cat_images
 
@@ -576,7 +604,7 @@ class Command(BaseCommand):
                 slug = make_unique_slug(base_slug, existing_slugs)
                 existing_slugs.add(slug)
 
-                extra_images = prod_data.pop("extra_images", [])
+                all_images = prod_data.pop("all_images", [])
                 prod_data.pop("category_slug", None)
 
                 product, created = Product.objects.update_or_create(
@@ -588,10 +616,10 @@ class Command(BaseCommand):
                     },
                 )
 
-                # Sync extra images
-                if extra_images:
+                # Sync all images (primary + additional) as ProductImage records
+                if all_images:
                     product.images.all().delete()
-                    for i, img_url in enumerate(extra_images):
+                    for i, img_url in enumerate(all_images):
                         ProductImage.objects.create(
                             product=product,
                             image_url=img_url,
@@ -651,7 +679,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "brand": "Bruno",
             "short_description": "Space-saving straight stairlift — folds to 13.5\" wide, 300 lb capacity.",
             "description": "The Bruno Elan is Bruno's most popular straight stairlift. Features a foldable rail, foldable footrest, and power seat swivel. Handles up to 300 lbs. Installed by factory-trained technicians in a couple of hours. Lifetime warranty on drive train.",
-            "primary_image_url": "https://lirp.cdn-website.com/6306fa56/dms3rep/multi/opt/-3750+Installed+%283%29-3fccc34a-1920w.png",
+            "primary_image_url": "https://d2j6dbq0eux0bg.cloudfront.net/images/76165667/3212384546.jpg",
+            "extra_images": [],
             "source_url": "https://www.millermobility.com/product/Bruno-Elan-Indoor-Straight-Stairlift-SRE-3050-300-lb-Lift-Capacity",
             "call_for_price": True,
             "is_featured": True,
@@ -664,7 +693,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "brand": "Bruno",
             "short_description": "Heavy-duty straight stairlift — 400 lb capacity, wider seat.",
             "description": "The Bruno Elite offers a 400 lb weight capacity and a wider, more comfortable seat. Features optional power folding rail for tighter landings.",
-            "primary_image_url": "",
+            "primary_image_url": "https://d2j6dbq0eux0bg.cloudfront.net/images/76165667/5280218121.jpg",
+            "extra_images": [],
             "source_url": "https://www.millermobility.com/product/Bruno-Elite-Indoor-Straight-Stairlift-SRE-2010-400-lb-Lift-Capacity",
             "call_for_price": True,
             "is_featured": False,
@@ -677,7 +707,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "brand": "Bruno",
             "short_description": "Custom curved rail stairlift — 400 lb, handles 90° and 180° turns.",
             "description": "Bruno's curved stairlift uses a durable all-steel rail custom-fabricated to your exact staircase — including 90°, 180° turns, and landings.",
-            "primary_image_url": "",
+            "primary_image_url": "https://d2j6dbq0eux0bg.cloudfront.net/images/76165667/5280226930.webp",
+            "extra_images": [],
             "source_url": "https://www.millermobility.com/product/Bruno-Elite-Indoor-Curved-Stairlift-CRE-2110-400-lb-Lift-Capacity",
             "call_for_price": True,
             "is_featured": False,
@@ -690,11 +721,26 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "brand": "Handicare",
             "short_description": "Slim single-tube rail straight stairlift — 300 lb capacity.",
             "description": "The Handicare 1100 uses a single-tube rail system that hugs the wall and leaves maximum stair space free.",
-            "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/stairlifts",
+            "primary_image_url": "https://d2j6dbq0eux0bg.cloudfront.net/images/76165667/4754944402.jpg",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Handicare-1100-Straight-Stairlift",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"weight_capacity_lbs": 300, "rail_type": "Straight — single tube"},
+        },
+        {
+            "name": "Handicare Freecurve Curved Stairlift",
+            "sku": "HAN-FREECURVE",
+            "category": "stairlifts",
+            "brand": "Handicare",
+            "short_description": "Custom curved stairlift — 275 lb capacity, fold-up seat.",
+            "description": "The Handicare Freecurve is a custom curved stairlift with a fold-up seat and armrests, leaving more stair space when not in use.",
+            "primary_image_url": "https://d2j6dbq0eux0bg.cloudfront.net/images/76165667/3212384681.jpg",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Handicare-Freecurve-Curved-Stairlift-275-lb-Capacity-Fold-Up-Seat",
+            "call_for_price": True,
+            "is_featured": False,
+            "specifications": {"weight_capacity_lbs": 275, "rail_type": "Curved — custom fabricated"},
         },
         {
             "name": "Harmar SL600HD Heavy-Duty Stairlift",
@@ -704,6 +750,7 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Super heavy-duty straight stairlift — 600 lb capacity.",
             "description": "The Harmar SL600HD is designed for bariatric users with a 600 lb weight capacity.",
             "primary_image_url": "",
+            "extra_images": [],
             "source_url": "https://www.millermobility.com/stairlifts",
             "call_for_price": True,
             "is_featured": False,
@@ -718,7 +765,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Foldable 41.6 lb scooter with lithium battery — 300 lb capacity.",
             "description": "The Go-Go Super Portable weighs just 41.6 lbs and features a lithium battery for easy air travel. Folds quickly for compact storage.",
             "primary_image_url": "https://lirp.cdn-website.com/6306fa56/dms3rep/multi/opt/SC15+%281%29-1920w.webp",
-            "source_url": "https://www.millermobility.com/mobility-scooters",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Pride-Go-Go-Super-Portable-Scooter-4-Wheel-SC15",
             "call_for_price": True,
             "is_featured": True,
             "specifications": {"weight_capacity_lbs": 300, "weight_lbs": 41.6, "battery": "Lithium", "folds": True},
@@ -731,7 +779,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Heavy-duty long-range 4-wheel scooter that disassembles easily.",
             "description": "The Buzzaround EX offers extended range and a heavy-duty frame while still disassembling easily for car transport.",
             "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/mobility-scooters",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Golden-Buzzaround-EX-4-Wheel-GB148",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"wheels": 4, "duty": "Heavy"},
@@ -744,7 +793,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Classic 3-wheel travel scooter — disassembles into 5 pieces under 14 lbs each.",
             "description": "Pride's best-selling travel scooter disassembles into five lightweight pieces, heaviest under 14 lbs. Tight turning radius for indoor use.",
             "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/mobility-scooters",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Pride-Go-Go-Elite-Traveller-3-Wheel-SC40E",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"wheels": 3, "pieces": 5},
@@ -758,7 +808,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Carbon fiber power chair — extended range, higher bariatric capacity, folds for travel.",
             "description": "The Jazzy Carbon 27X combines a lightweight carbon fiber frame with extended-range batteries and higher weight capacity.",
             "primary_image_url": "https://lirp.cdn-website.com/6306fa56/dms3rep/multi/opt/gogocarbonfamily+%281%29-1920w.jpg",
-            "source_url": "https://www.millermobility.com/power-wheelchairs",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Pride-Jazzyr-Carbon-27X",
             "call_for_price": True,
             "is_featured": True,
             "specifications": {"frame": "Carbon fiber", "folds": True},
@@ -771,7 +822,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Ultra-lightweight at just 26 lbs — carbon fiber foldable electric wheelchair.",
             "description": "The Journey Air Elite weighs only 26 lbs, making it one of the lightest power chairs available. Carbon fiber frame folds in seconds.",
             "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/power-wheelchairs",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Journey-Air-Elite",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"weight_lbs": 26, "frame": "Carbon fiber", "folds": True},
@@ -785,7 +837,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "4-position power lift recliner with memory foam chaise pad.",
             "description": "The VivaLift Tranquil 2 features a plush memory foam chaise pad and 4-position recline mechanism. Available in multiple fabric options.",
             "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/lift-chairs-power-recliners",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Pride-VivaLift-Tranquil-2-PLR935",
             "call_for_price": True,
             "is_featured": True,
             "specifications": {"positions": 4, "padding": "Memory foam chaise pad"},
@@ -798,7 +851,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Slim-profile lift recliner with Twilight full-recline and sleeper function.",
             "description": "The Golden EZ Sleeper Slim is designed for smaller spaces without sacrificing comfort. The Twilight system allows a fully flat sleeping position.",
             "primary_image_url": "https://lirp.cdn-website.com/6306fa56/dms3rep/multi/opt/rec-pr764-1920w.webp",
-            "source_url": "https://www.millermobility.com/lift-chairs-power-recliners",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Golden-EZ-Sleeper-Slim-with-Twilight-PR764",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"profile": "Slim", "sleeper": True},
@@ -812,7 +866,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Lightweight folding wheelchair with patented ergonomic lumbar back support.",
             "description": "The Strongback Comfort 24 features a patented back support system that improves posture and reduces pain. Lightweight aluminum frame.",
             "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/wheelchairs-transport-chairs",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Strongback-Comfort-24-Lightweight-Folding-Wheelchair",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"back_support": "Patented lumbar ergonomic", "frame": "Lightweight aluminum"},
@@ -826,7 +881,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "10-inch chrome front wheels, padded seat, easy fold-up outdoor rollator.",
             "description": "The Rimor LT features large 10-inch chrome front wheels for smooth rolling on outdoor surfaces, padded seat for resting, and loop brakes.",
             "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/walkers-rollators",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Rhythm-Rimor-LT-Rollator-970BK",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"front_wheel_size_inches": 10, "folds": True},
@@ -839,8 +895,9 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "brand": "Bruno",
             "short_description": "Interior platform vehicle lift for minivans and SUVs — stores device inside.",
             "description": "The Bruno Joey interior platform lift raises your scooter or power wheelchair into the interior of your vehicle through the rear hatch.",
-            "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/vehicle-lifts",
+            "primary_image_url": "https://d2j6dbq0eux0bg.cloudfront.net/images/76165667/5280250389.jpg",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Bruno-Joey-Platform-Interior-Vehicle-Lift-VSL-4400",
             "call_for_price": True,
             "is_featured": True,
             "specifications": {"mount_type": "Interior rear hatch", "compatible_with": "Minivans, SUVs"},
@@ -852,11 +909,54 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "brand": "Bruno",
             "short_description": "Exterior hitch-mounted platform lift — carries scooter/wheelchair outside vehicle.",
             "description": "The Bruno Out-Sider attaches to your vehicle's trailer hitch and lifts your scooter or power wheelchair onto an exterior platform.",
-            "primary_image_url": "https://lirp.cdn-website.com/6306fa56/dms3rep/multi/opt/car-lift-asl275-1920w.jpg",
-            "source_url": "https://www.millermobility.com/vehicle-lifts",
+            "primary_image_url": "https://d2j6dbq0eux0bg.cloudfront.net/images/76165667/3208994294.jpg",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Bruno-Out-Sider-Platform-Style-Vehicle-Lift-ASL-275",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"mount_type": "Exterior hitch mount"},
+        },
+        {
+            "name": "Bruno Chariot Exterior Wheeled Platform Vehicle Lift ASL-700",
+            "sku": "BRU-ASL-700",
+            "category": "vehicle-lifts",
+            "brand": "Bruno",
+            "short_description": "Exterior wheeled platform lift — drives device on/off automatically.",
+            "description": "The Bruno Chariot exterior platform lift features an automated drive-on/off system — the device rides onto the platform automatically.",
+            "primary_image_url": "https://d2j6dbq0eux0bg.cloudfront.net/images/76165667/3208560861.jpg",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Bruno-Chariot-Exterior-Wheeled-Platform-Vehicle-Lift-ASL-700",
+            "call_for_price": True,
+            "is_featured": False,
+            "specifications": {"mount_type": "Exterior wheeled platform"},
+        },
+        {
+            "name": "Harmar Universal Scooter Hitch Mount Lift AL100",
+            "sku": "HAR-AL100",
+            "category": "vehicle-lifts",
+            "brand": "Harmar",
+            "short_description": "Universal hitch-mounted scooter lift — fits most 1.25\" and 2\" receivers.",
+            "description": "The Harmar AL100 is a universal hitch-mounted scooter lift compatible with most scooters. Fits 1.25\" and 2\" trailer hitch receivers.",
+            "primary_image_url": "https://d2j6dbq0eux0bg.cloudfront.net/images/76165667/5308861027.jpg",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Harmar-Universal-Scooter-Hitch-Mount-Lift-AL100-AL100HD",
+            "call_for_price": True,
+            "is_featured": False,
+            "specifications": {"mount_type": "Hitch mount", "compatible_with": "Scooters"},
+        },
+        {
+            "name": "Harmar Universal Power Chair Hitch Mount Lift AL500",
+            "sku": "HAR-AL500",
+            "category": "vehicle-lifts",
+            "brand": "Harmar",
+            "short_description": "Universal hitch-mounted power wheelchair lift — high-capacity.",
+            "description": "The Harmar AL500 is a universal hitch-mounted lift designed for power wheelchairs with a higher weight capacity than scooter lifts.",
+            "primary_image_url": "https://d2j6dbq0eux0bg.cloudfront.net/images/76165667/5308941861.jpg",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Harmar-Universal-Powerchair-Hitch-Mount-Lift-AL500-AL500HD",
+            "call_for_price": True,
+            "is_featured": False,
+            "specifications": {"mount_type": "Hitch mount", "compatible_with": "Power wheelchairs"},
         },
         # ── Patient Lifts ──
         {
@@ -867,6 +967,7 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Full-body electric patient lift with ergonomic hand control — 400 lb capacity.",
             "description": "The BestCare PL400 provides powered full-body patient transfers between bed, wheelchair, bath, and more. Ergonomic one-handed hand control.",
             "primary_image_url": "",
+            "extra_images": [],
             "source_url": "https://www.millermobility.com/patient-lifts",
             "call_for_price": True,
             "is_featured": False,
@@ -881,7 +982,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Solid-surface portable aluminum ramp with 2-line handrails and self-adjusting transition plates.",
             "description": "The EZ-ACCESS GATEWAY 3G features a solid non-slip aluminum surface, self-adjusting bottom transition plates, and included 2-line handrails. ADA-compliant.",
             "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/ramps",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/EZ-ACCESS-GATEWAY-3G-Solid-Surface-Aluminum-Portable-Wheelchair-Ramp-with-Textured-Surface-Self-Adjusting-Bottom-Transition-Plates-and-2-Line-Handrails",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"surface": "Solid non-slip textured aluminum", "handrails": "2-line included"},
@@ -894,7 +996,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Single-fold suitcase ramp — slip-resistant surface, self-adjusting transition plates.",
             "description": "Folds in half like a suitcase for easy carrying. Slip-resistant surface and self-adjusting bottom transition plates.",
             "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/ramps",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/EZ-ACCESS-Suitcase-Singlefold-Portable-Ramp-with-Slip-Resistant-Surface-and-Self-Adjusting-Bottom-Transition-Plates",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"fold_type": "Singlefold suitcase"},
@@ -908,7 +1011,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Hi-low adjustable residential bed with dual-zone vibrating massage.",
             "description": "The Golden Passport is a residential hi-low adjustable bed that raises and lowers for easy transfers. Dual-zone vibrating massage adds therapeutic comfort.",
             "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/beds",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/The-Golden-Passporttm-Hi-Low-Adjustable-Bed-with-Dual-Zone-Vibrating-Massage",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"adjustment": "Hi-Low electric", "massage": "Dual-zone vibrating"},
@@ -922,6 +1026,7 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Residential vertical platform lift for porch, deck, and home entry access.",
             "description": "The Bruno Residential VPL provides safe, smooth access to raised porches, decks, and home entries. Features fold-down ramp, safety sensors, emergency stop, and battery backup.",
             "primary_image_url": "",
+            "extra_images": [],
             "source_url": "https://www.millermobility.com/vertical-platform-lifts-home-elevators",
             "call_for_price": True,
             "is_featured": False,
@@ -936,7 +1041,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Floor-to-ceiling security pole — installs without tools in minutes, 300 lb capacity.",
             "description": "The Stander Wonder Pole installs between floor and ceiling by turning a jackscrew — no drilling required. Must align with a ceiling joist.",
             "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/security-poles",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Stander-Wonder-Pole-1100-W",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"weight_capacity_lbs": 300, "installation": "Tool-free jackscrew"},
@@ -949,7 +1055,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "8 ft bariatric floor-to-ceiling grab bar — 450 lb capacity.",
             "description": "The Healthcraft Bariatric SuperBar is an 8-foot floor-to-ceiling grab bar with 450 lb capacity. Ideal for bedroom, kitchen, bath, and shower safety.",
             "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/security-poles",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/HEALTHCRAFT-Bariatric-SuperBar-Universal-Floor-to-Ceiling-Grab-Bar-8Ft-Transfer-Pole-for-Seniors-&-Handicapped-Elderly-Adults-Bedroom-Kitchen-Bath-and-Shower-Safety-Up-to-450Lbs",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"weight_capacity_lbs": 450, "height_ft": 8},
@@ -963,7 +1070,8 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
             "short_description": "Lift-chair side tray with standing handle assist and swivel surface.",
             "description": "The Stander Assist-A-Tray attaches beside a lift chair or recliner and provides a swiveling surface for meals and activities plus a sturdy handle to help users stand up.",
             "primary_image_url": "",
-            "source_url": "https://www.millermobility.com/tables-trays",
+            "extra_images": [],
+            "source_url": "https://www.millermobility.com/product/Stander-Assist-A-Tray-Table",
             "call_for_price": True,
             "is_featured": False,
             "specifications": {"swivel": True, "standing_assist": True},
@@ -973,6 +1081,7 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
     for prod_data in FALLBACK:
         cat_slug = prod_data.pop("category")
         brand_key = prod_data.pop("brand")
+        extra_images = prod_data.pop("extra_images", [])
         cat_obj = category_map.get(cat_slug)
         brand_obj = brand_map.get(brand_key)
 
@@ -995,4 +1104,18 @@ def _seed_fallback_products(category_map, brand_map, existing_slugs, stdout):
                 "is_active": True,
             },
         )
+
+        # Save primary + extra images as ProductImage records
+        all_images = (
+            [product.primary_image_url] if product.primary_image_url else []
+        ) + extra_images
+        if all_images and not product.images.exists():
+            for i, img_url in enumerate(all_images[:6]):
+                ProductImage.objects.create(
+                    product=product,
+                    image_url=img_url,
+                    is_primary=(i == 0),
+                    sort_order=i,
+                )
+
         stdout.write(f"  {'✓' if created else '↻'} {product.name[:70]}")

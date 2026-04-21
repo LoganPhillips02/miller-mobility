@@ -23,7 +23,7 @@ export const createBrand = (data = {}) => ({
 // ─── Product Image ───────────────────────────────────────────────────────────
 export const createProductImage = (data = {}) => ({
   id: data.id ?? null,
-  imageUrl: data.image ?? null,
+  imageUrl: data.image_url ?? null,
   altText: data.alt_text ?? '',
   isPrimary: data.is_primary ?? false,
   sortOrder: data.sort_order ?? 0,
@@ -75,7 +75,7 @@ export const createProduct = (data = {}) => ({
   specifications: data.specifications ?? {},
   modelNumber: data.model_number ?? '',
   sku: data.sku ?? '',
-  primaryImage: data.primary_image ?? null,
+  primaryImage: data.primary_image_url ?? null,
   images: (data.images ?? []).map(createProductImage),
   conversionDetails: data.conversion_details ? createVehicleConversion(data.conversion_details) : null,
   createdAt: data.created_at ? new Date(data.created_at) : null,

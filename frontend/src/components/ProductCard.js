@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     ...Shadows.md,
   },
   imageContainer: {
-    height: 180,
+    aspectRatio: 1,
     backgroundColor: Colors.gray50,
     position: 'relative',
   },
