@@ -12,7 +12,8 @@ load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-key-change-in-production")
 DEBUG = os.environ.get("DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+_ALLOWED_HOSTS_ENV = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = _ALLOWED_HOSTS_ENV + [".app.github.dev", ".githubpreview.dev"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -127,4 +128,15 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8081",
     "exp://localhost:8081",
 ]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.app\.github\.dev$",
+    r"^https://.*\.githubpreview\.dev$",
+]
 CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOW_CREDENTIALS = True
+
+# Allow Codespaces HTTPS origin for CSRF
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.app.github.dev",
+    "https://*.githubpreview.dev",
+]

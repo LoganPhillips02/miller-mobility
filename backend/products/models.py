@@ -7,7 +7,7 @@ class Category(models.Model):
     description = models.TextField(blank=True)
     icon = models.CharField(max_length=50, blank=True, help_text="Icon name for mobile app")
     # External image URL scraped from millermobility.com
-    image_url = models.URLField(blank=True, help_text="Category image URL from millermobility.com")
+    image_url = models.TextField(blank=True, help_text="Category image URL from millermobility.com")
     sort_order = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
@@ -20,8 +20,8 @@ class Category(models.Model):
 
 class Brand(models.Model):
     name = models.CharField(max_length=100)
-    logo_url = models.URLField(blank=True)
-    website = models.URLField(blank=True)
+    logo_url = models.TextField(blank=True)
+    website = models.TextField(blank=True)
 
     class Meta:
         ordering = ["name"]
@@ -46,13 +46,13 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="products")
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name="products")
 
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True, max_length=220)
-    model_number = models.CharField(max_length=100, blank=True)
+    name = models.TextField()
+    slug = models.TextField(unique=True)
+    model_number = models.TextField(blank=True)
     sku = models.CharField(max_length=100, blank=True, null=True, unique=True)
 
     description = models.TextField(blank=True)
-    short_description = models.CharField(max_length=400, blank=True)
+    short_description = models.TextField(blank=True)
 
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     msrp = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -63,9 +63,9 @@ class Product(models.Model):
     specifications = models.JSONField(default=dict, blank=True)
 
     # Primary image URL scraped directly from millermobility.com
-    primary_image_url = models.URLField(blank=True, help_text="Primary image URL from millermobility.com")
+    primary_image_url = models.TextField(blank=True, help_text="Primary image URL from millermobility.com")
     # Source URL on millermobility.com for reference / re-scraping
-    source_url = models.URLField(blank=True, help_text="Product page URL on millermobility.com")
+    source_url = models.TextField(blank=True, help_text="Product page URL on millermobility.com")
 
     is_featured = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -97,8 +97,8 @@ class Product(models.Model):
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
     # Store the external CDN URL instead of uploading locally
-    image_url = models.URLField(help_text="Image URL from millermobility.com CDN")
-    alt_text = models.CharField(max_length=200, blank=True)
+    image_url = models.TextField(help_text="Image URL from millermobility.com CDN")
+    alt_text = models.TextField(blank=True)
     is_primary = models.BooleanField(default=False)
     sort_order = models.PositiveSmallIntegerField(default=0)
 
