@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -99,8 +99,8 @@ const PROMOS = [
     tab: 'Inventory',
   },
   {
-    image: require('../../assets/home/mothers-day-sale.webp'),
-    tab: 'Inventory',
+    image: require('../../assets/home/seasonal-promo.webp'),
+    tab: 'Deals',
   },
 ];
 
@@ -112,6 +112,57 @@ const HomeScreen = () => {
   const deals = rawDeals.map(createDeal);
   const previewDeals = deals.slice(0, 4);
   const [promoIndex, setPromoIndex] = useState(0);
+  const [isAutoPlay, setIsAutoPlay] = useState(true);
+  const [slideAnim] = useState(new Animated.Value(0));
+  const [direction, setDirection] = useState(1);
+
+  // Auto-cycle promos every 3 seconds
+  useEffect(() => {
+    if (!isAutoPlay || PROMOS.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setDirection(1);
+      setPromoIndex(prev => (prev + 1) % PROMOS.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isAutoPlay]);
+
+  // Animate promo image transitions
+  useEffect(() => {
+    slideAnim.setValue(0);
+    Animated.timing(slideAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [promoIndex, slideAnim]);
+
+  const handlePrevPromo = () => {
+    setIsAutoPlay(false);
+    setDirection(-1);
+    setPromoIndex(i => (i - 1 + PROMOS.length) % PROMOS.length);
+  };
+
+  const handleNextPromo = () => {
+    setIsAutoPlay(false);
+    setDirection(1);
+    setPromoIndex(i => (i + 1) % PROMOS.length);
+  };
+
+  // Calculate previous index for animation
+  const prevIndex = (promoIndex - direction + PROMOS.length) % PROMOS.length;
+
+  // Interpolate slide animations
+  const currentImageTranslateX = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, direction * -SCREEN_WIDTH],
+  });
+
+  const nextImageTranslateX = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [direction * SCREEN_WIDTH, 0],
+  });
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -141,9 +192,22 @@ const HomeScreen = () => {
                 onPress={() => switchTab(PROMOS[promoIndex].tab)}
               >
                 <View style={styles.promoImageWrapper}>
-                  <Image
+                  {/* Previous/current image sliding out */}
+                  <Animated.Image
+                    source={PROMOS[prevIndex].image}
+                    style={[
+                      styles.promoItemImage,
+                      { transform: [{ translateX: currentImageTranslateX }] }
+                    ]}
+                    resizeMode="contain"
+                  />
+                  {/* Next image sliding in */}
+                  <Animated.Image
                     source={PROMOS[promoIndex].image}
-                    style={styles.promoItemImage}
+                    style={[
+                      styles.promoItemImage,
+                      { position: 'absolute', transform: [{ translateX: nextImageTranslateX }] }
+                    ]}
                     resizeMode="contain"
                   />
                 </View>
@@ -153,7 +217,7 @@ const HomeScreen = () => {
             {/* Left arrow */}
             <TouchableOpacity
               style={[styles.promoArrow, styles.promoArrowLeft]}
-              onPress={() => setPromoIndex(i => (i - 1 + PROMOS.length) % PROMOS.length)}
+              onPress={handlePrevPromo}
             >
               <Text style={styles.promoArrowText}>‹</Text>
             </TouchableOpacity>
@@ -161,7 +225,7 @@ const HomeScreen = () => {
             {/* Right arrow */}
             <TouchableOpacity
               style={[styles.promoArrow, styles.promoArrowRight]}
-              onPress={() => setPromoIndex(i => (i + 1) % PROMOS.length)}
+              onPress={handleNextPromo}
             >
               <Text style={styles.promoArrowText}>›</Text>
             </TouchableOpacity>
@@ -331,7 +395,7 @@ const styles = StyleSheet.create({
   promoArrow: {
     position: 'absolute',
     top: '50%',
-    marginTop: -26,
+    marginTop: -24,
     zIndex: 10,
     backgroundColor: 'rgba(255,255,255,0.85)',
     width: 48,
@@ -340,13 +404,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
   },
   promoArrowLeft:  { left: Spacing.md },
   promoArrowRight: { right: Spacing.md },
-  promoArrowText:  { fontSize: 30, fontWeight: '300', color: Colors.black, lineHeight: 34 },
+  promoArrowText:  { fontSize: 32, fontWeight: '300', color: Colors.primary, lineHeight: 36 },
   promoDots: {
     position: 'absolute',
     bottom: Spacing.md,
